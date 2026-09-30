@@ -1,0 +1,25 @@
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários
+*.tmp
+*.swp
+*~
+
+# Dados sensíveis
+*_confidential.md
+*_private.md
+dados_reais/
+
+# Certificados e credenciais
+*.pem
+*.key
+credentials.json
+
+# PDFs gerados (se quiser versionar PDFs, remova esta linha)
+*.pdf
+
+# Backups
+*.bak
+*.backup
