@@ -48,6 +48,19 @@
 
 ---
 
+## 📕 Relatório ATY Consulting
+
+**[Relatorio-ATY-Consulting.pdf](Relatorio-ATY-Consulting.pdf)** — relatório de preparação para o processo seletivo da [ATY Consulting](https://www.atyconsulting.com/), com 91 páginas: análise da empresa (4 ofertas, 3 valores, 4 clientes), perfil dos sócios e pontos de conexão, diagnóstico de fit e gaps, 7 cases STAR, 45 perguntas (técnicas e de fit) com respostas, pitches e plano de 30 dias.
+
+Os documentos-fonte em Markdown estão em **[preparacao-aty/](preparacao-aty/)**. Para regerar o PDF após editá-los:
+
+```bash
+pip install weasyprint markdown pygments
+python3 build_pdf.py
+```
+
+---
+
 ## 📂 Estrutura do Repositório
 
 - **[curriculo/experiencia.md](curriculo/experiencia.md)** - Histórico profissional detalhado

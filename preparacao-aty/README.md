@@ -15,7 +15,7 @@
 | 2 | [02-socios-pontos-em-comum.md](02-socios-pontos-em-comum.md) | Gilberto, André, Nicole + matriz de pontos de conexão |
 | 3 | [03-meu-perfil-e-fit.md](03-meu-perfil-e-fit.md) | Leitura do seu CV, fit real, 7 gaps com mitigação |
 | 4 | [04-cases-star.md](04-cases-star.md) | 7 cases STAR da sua experiência real + matriz de uso |
-| 5 | [05-perguntas-tecnicas.md](05-perguntas-tecnicas.md) | 25 perguntas técnicas com respostas calibradas |
+| 5 | [05-perguntas-tecnicas.md](05-perguntas-tecnicas.md) | 20 perguntas técnicas + 5 bônus, com respostas calibradas |
 | 6 | [06-fit-interview.md](06-fit-interview.md) | 25 perguntas de fit + respostas estruturadas |
 | 7 | [07-pitch-e-curriculo.md](07-pitch-e-curriculo.md) | Pitches 30/60/90s + expansão dos 12 bullets do CV |
 | 8 | [08-estrategia-e-plano.md](08-estrategia-e-plano.md) | 19 perguntas a fazer, red flags, checklist, plano de 30 dias |

@@ -22,3 +22,6 @@ credentials.json
 # Backups
 *.bak
 *.backup
+
+# Artefato intermediário do build do PDF
+.build_relatorio.html
