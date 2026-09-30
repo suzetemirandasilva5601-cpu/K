@@ -17,8 +17,7 @@ dados_reais/
 *.key
 credentials.json
 
-# PDFs gerados (se quiser versionar PDFs, remova esta linha)
-*.pdf
+# Currículos em PDF SÃO versionados (não ignorar *.pdf)
 
 # Backups
 *.bak
