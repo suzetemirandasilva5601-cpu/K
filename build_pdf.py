@@ -32,6 +32,9 @@ CHAPTERS = [
     "06-fit-interview.md",
     "07-pitch-e-curriculo.md",
     "08-estrategia-e-plano.md",
+    "09-preenchimento-e-reconstrucao.md",
+    "10-cases-guesstimate.md",
+    "11-perguntas-ferramentas.md",
 ]
 
 # Títulos curtos para o cabeçalho corrido
@@ -46,6 +49,9 @@ SHORT_TITLES = {
     "06-fit-interview.md": "Parte 5 — Fit Interview",
     "07-pitch-e-curriculo.md": "Parte 6 — Pitch e Currículo",
     "08-estrategia-e-plano.md": "Partes 7 e 8 — Estratégia e Plano",
+    "09-preenchimento-e-reconstrucao.md": "Parte 9 — Preenchimento",
+    "10-cases-guesstimate.md": "Parte 10 — Cases e Guesstimate",
+    "11-perguntas-ferramentas.md": "Parte 11 — Ferramentas",
 }
 
 # ----------------------------------------------------------------------------
@@ -98,6 +104,32 @@ def outside_code(text: str, fn):
     """Aplica fn apenas fora de blocos de código cercados."""
     parts = re.split(r"(```.*?```)", text, flags=re.S)
     return "".join(p if p.startswith("```") else fn(p) for p in parts)
+
+
+LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+\.)\s")
+
+
+def fix_tight_lists(text: str) -> str:
+    """Insere linha em branco antes de lista que segue parágrafo.
+
+    O Python-Markdown NÃO reconhece uma lista colada a um parágrafo (trata os
+    itens como continuação do texto). O CommonMark reconhece, então o markdown
+    "parece" certo no GitHub e quebra no PDF. Normalizamos aqui.
+    """
+    out = []
+    for line in text.split("\n"):
+        if LIST_ITEM.match(line) and out:
+            prev = out[-1]
+            is_paragraph = (
+                prev.strip()
+                and not LIST_ITEM.match(prev)
+                and not prev.lstrip().startswith(("|", "#", ">", "`"))
+                and not prev.startswith((" ", "\t"))
+            )
+            if is_paragraph:
+                out.append("")
+        out.append(line)
+    return "\n".join(out)
 
 
 def flatten_links(text: str) -> str:
@@ -153,6 +185,7 @@ def build_html() -> str:
         if fname == "README.md":
             raw = re.sub(r"\n## Índice\n.*?\n---\n", "\n", raw, flags=re.S)
         raw = normalize_symbols(raw)
+        raw = outside_code(raw, fix_tight_lists)
         raw = outside_code(raw, flatten_links)
         raw = outside_code(raw, tag_markers)
 
