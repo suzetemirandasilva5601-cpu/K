@@ -25,3 +25,4 @@ credentials.json
 
 # Artefato intermediário do build do PDF
 .build_relatorio.html
+__pycache__/
