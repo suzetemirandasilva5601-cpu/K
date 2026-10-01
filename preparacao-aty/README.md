@@ -22,6 +22,7 @@
 | 9 | [09-preenchimento-e-reconstrucao.md](09-preenchimento-e-reconstrucao.md) | Método reconstruído, recuperação dos números e versões sem número |
 | 10 | [10-cases-guesstimate.md](10-cases-guesstimate.md) | 6 cases completos + guesstimates, contas na folha e brainstorm |
 | 11 | [11-perguntas-ferramentas.md](11-perguntas-ferramentas.md) | 30 perguntas sobre Excel/VBA, SQL, Python, Power BI, dbt e Databricks |
+| 12 | [12-dossie-varejo-cases.md](12-dossie-varejo-cases.md) | **Dossiê varejo:** malha logística, planilha de negociação, split payment + 5 cases completos |
 
 ---
 
