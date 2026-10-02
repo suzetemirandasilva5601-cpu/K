@@ -52,7 +52,36 @@
 
 **[Briefing-Pre-Entrevista-ATY.pdf](Briefing-Pre-Entrevista-ATY.pdf)** — 7 páginas de consulta rápida, para revisar na véspera. Quatro blocos: como responder sobre o projeto em Python/SQL, como responder sobre modelagem financeira, o projeto de malha logística da ATY (frentes, planilha de negociação, split payment) e o que se espera de um júnior. Termina com colinha de números e fórmulas.
 
-Fonte em [briefing/](briefing/). Para regerar: `python3 build_briefing.py`
+Fonte em [briefing/](briefing/).
+
+---
+
+## 📐 Frameworks de Case — Varejo
+
+**[Frameworks-Varejo-ATY.pdf](Frameworks-Varejo-ATY.pdf)** — 8 páginas com quatro frameworks em diagramas de caixa, desenháveis à mão em 60 segundos:
+
+- **Retail Profitability** — lucro decomposto até a cadeia multiplicativa (tráfego × conversão × ticket)
+- **Omnichannel** — cliente, oferta, entrega, econômica e habilitadores (com atribuição de venda como ponto cego)
+- **Retail Market Entry** — mercado, direito de ganhar, forma de entrada, viabilidade e risco (com curva de maturação e canibalização)
+- **Retail Market Sizing** — bottom-up e top-down reconciliados, funil TAM/SAM/SOM e âncoras do Brasil
+
+Cada um traz a árvore completa, a versão de 30 segundos, as perguntas de clarificação e a armadilha típica. Fonte em [frameworks/](frameworks/).
+
+---
+
+## 🔧 Como regerar os PDFs
+
+```bash
+bash setup_build.sh          # dependências + fontes DejaVu
+
+python3 build_pdf.py         # relatório completo (capa + índice + 13 capítulos)
+
+python3 build_doc.py briefing/briefing-pre-entrevista.md \
+    Briefing-Pre-Entrevista-ATY.pdf "Briefing Pré-Entrevista — ATY Consulting"
+
+python3 build_doc.py frameworks/frameworks-varejo.md \
+    Frameworks-Varejo-ATY.pdf "Frameworks de Case — Varejo"
+```
 
 ---
 
