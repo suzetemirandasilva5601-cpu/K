@@ -69,6 +69,14 @@ Cada um traz a árvore completa, a versão de 30 segundos, as perguntas de clari
 
 ---
 
+## 🎙️ Simulador de Case por Voz
+
+**[prompts/prompt-simulador-case.md](prompts/prompt-simulador-case.md)** — prompt pronto para colar numa IA com modo de voz. A IA assume o papel de entrevistador e conduz um case completo da abertura à recomendação final.
+
+Traz o caso fechado e consistente (rede de utilidades domésticas com margem caindo de 9% para 5%), três gráficos para revelar progressivamente, o gabarito, 18 perguntas improvisadas, rubrica de avaliação em 7 critérios e regras específicas para interação por áudio. Inclui dois casos alternativos (malha logística e market sizing) e um modo invertido, em que a IA resolve e você entrevista.
+
+---
+
 ## 🔧 Como regerar os PDFs
 
 ```bash
