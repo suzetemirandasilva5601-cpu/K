@@ -97,7 +97,17 @@ def normalize_symbols(text: str) -> str:
     # Checkbox de lista -> caixa desenhável
     text = re.sub(r"^(\s*)- \[ \] ", "\\1- \u2610 ", text, flags=re.M)
     text = re.sub(r"^(\s*)- \[x\] ", "\\1- \u2611 ", text, flags=re.M)
-    # Limpa espaço duplo e sobras em títulos/células
+    return text
+
+
+def clean_whitespace(text: str) -> str:
+    """Limpa espaço redundante em títulos e células de tabela.
+
+    ATENÇÃO: precisa rodar APENAS fora de blocos de código. Colapsar espaço
+    dentro de um bloco destrói o alinhamento de qualquer diagrama ASCII, e o
+    estrago não aparece na extração de texto do PDF (onde espaço colapsado
+    parece artefato normal do extrator). Aplique sempre via outside_code().
+    """
     text = re.sub(r"^(#{1,6})\s+", r"\1 ", text, flags=re.M)
     text = re.sub(r"\|\s{2,}", "| ", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
@@ -189,6 +199,7 @@ def build_html() -> str:
         if fname == "README.md":
             raw = re.sub(r"\n## Índice\n.*?\n---\n", "\n", raw, flags=re.S)
         raw = normalize_symbols(raw)
+        raw = outside_code(raw, clean_whitespace)
         raw = outside_code(raw, fix_tight_lists)
         raw = outside_code(raw, flatten_links)
         raw = outside_code(raw, tag_markers)

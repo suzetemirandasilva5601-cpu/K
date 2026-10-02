@@ -23,7 +23,14 @@ from pathlib import Path
 import markdown
 from weasyprint import HTML
 
-from build_pdf import CSS, fix_tight_lists, normalize_symbols, outside_code, tag_markers
+from build_pdf import (
+    CSS,
+    clean_whitespace,
+    fix_tight_lists,
+    normalize_symbols,
+    outside_code,
+    tag_markers,
+)
 
 BASE = Path(__file__).parent
 
@@ -63,18 +70,83 @@ td { padding: 1.4mm 2mm; }
 
 blockquote { margin: 2mm 0 2.5mm; padding: 2.2mm 3mm; font-size: 8.9pt; }
 
-/* Diagramas ASCII: fonte menor e entrelinha justa para caber na folha */
-pre { font-size: 6.9pt; padding: 2.2mm 2.8mm; margin: 2mm 0 3mm; line-height: 1.3; }
+pre { font-size: 7.4pt; padding: 2.2mm 2.8mm; margin: 2mm 0 3mm; line-height: 1.35; }
 code { font-size: 8pt; }
 hr { margin: 4mm 0; }
 
 blockquote, table, pre { page-break-inside: avoid; }
+
+/* ================================================================
+   SISTEMA DE CAIXAS DE FRAMEWORK
+   Caixas reais em CSS, não arte ASCII. Usa display:table para o
+   WeasyPrint distribuir as colunas de forma previsível.
+   ================================================================ */
+
+.fw { margin: 3mm 0 4mm; page-break-inside: avoid; }
+
+/* Caixa-topo: a métrica-objetivo */
+.fw-top {
+  font-family: "DejaVu Sans"; font-weight: bold; font-size: 10pt;
+  text-align: center; color: #fff; background: #14532d;
+  padding: 2mm; border-radius: 2pt; margin-bottom: 0;
+}
+/* Conector vertical entre níveis */
+.fw-link { width: 0; height: 3mm; margin: 0 auto;
+           border-left: 1.2pt solid #14532d; }
+.fw-eq { font-family: "DejaVu Sans"; font-size: 8pt; text-align: center;
+         color: #15803d; font-weight: bold; padding: 1mm 0; }
+
+/* Linha de colunas */
+.fw-row { display: table; width: 100%; border-spacing: 2mm 0; }
+.fw-col { display: table-cell; vertical-align: top; width: 1%; }
+
+/* Caixa de ramo */
+.fw-box { border: 0.8pt solid #14532d; border-radius: 2pt; overflow: hidden;
+          height: 100%; }
+.fw-box > .h {
+  font-family: "DejaVu Sans"; font-weight: bold; font-size: 8.2pt;
+  background: #e8f0ea; color: #14532d; padding: 1.4mm 2mm;
+  border-bottom: 0.6pt solid #14532d; text-align: center;
+}
+.fw-box > .b {
+  font-family: "DejaVu Sans"; font-size: 7.4pt; line-height: 1.45;
+  padding: 1.6mm 2mm; color: #26303a;
+}
+.fw-box > .b ul { margin: 0; padding-left: 3.2mm; list-style-type: none; }
+.fw-box > .b li { margin: 0.5mm 0; text-indent: -3.2mm; padding-left: 3.2mm; }
+.fw-box > .b li::before { content: "· "; color: #15803d; font-weight: bold; }
+
+/* Variante secundária, para sub-ramos */
+.fw-box.alt { border-color: #9ca3af; }
+.fw-box.alt > .h { background: #f3f4f6; color: #374151;
+                   border-bottom-color: #9ca3af; }
+
+/* Variante de alerta, para a armadilha / ponto cego */
+.fw-box.warn { border-color: #ca8a04; }
+.fw-box.warn > .h { background: #fefce8; color: #713f12;
+                    border-bottom-color: #ca8a04; }
+
+/* Faixa de fluxo horizontal (supply chain) */
+.flow { display: table; width: 100%; border-spacing: 1.2mm 0; margin: 2.5mm 0; }
+.flow-i { display: table-cell; vertical-align: middle; width: 1%;
+          border: 0.8pt solid #14532d; border-radius: 2pt; padding: 1.6mm 1.2mm;
+          font-family: "DejaVu Sans"; font-size: 7.2pt; text-align: center;
+          line-height: 1.35; }
+.flow-i b { display: block; font-size: 7.8pt; color: #14532d; margin-bottom: 0.6mm; }
+.flow-a { display: table-cell; vertical-align: middle; width: 4mm;
+          text-align: center; font-size: 10pt; color: #15803d; font-weight: bold; }
+
+/* Nota de rodapé de framework */
+.fw-note { font-family: "DejaVu Sans"; font-size: 7.4pt; color: #4b5563;
+           border-left: 2pt solid #d1d5db; padding: 1mm 0 1mm 2.5mm;
+           margin: 2mm 0 0; }
 """
 
 
 def build(src: Path, titulo: str) -> str:
     raw = src.read_text(encoding="utf-8")
     raw = normalize_symbols(raw)
+    raw = outside_code(raw, clean_whitespace)
     raw = outside_code(raw, fix_tight_lists)
     raw = outside_code(raw, tag_markers)
 
