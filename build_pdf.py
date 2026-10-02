@@ -36,6 +36,7 @@ CHAPTERS = [
     "10-cases-guesstimate.md",
     "11-perguntas-ferramentas.md",
     "12-dossie-varejo-cases.md",
+    "13-frentes-malha-e-equipe.md",
 ]
 
 # Títulos curtos para o cabeçalho corrido
@@ -54,6 +55,7 @@ SHORT_TITLES = {
     "10-cases-guesstimate.md": "Parte 10 — Cases e Guesstimate",
     "11-perguntas-ferramentas.md": "Parte 11 — Ferramentas",
     "12-dossie-varejo-cases.md": "Parte 12 — Dossiê Varejo",
+    "13-frentes-malha-e-equipe.md": "Parte 13 — Frentes e Equipe",
 }
 
 # ----------------------------------------------------------------------------

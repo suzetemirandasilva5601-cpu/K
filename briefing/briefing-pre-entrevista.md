@@ -22,28 +22,69 @@
 
 ### O argumento que amarra tudo — decore
 
-> "A base não cabia no Excel: 1,2 milhão de linhas passa do limite de pouco mais de um milhão da planilha. Foi por isso que o trabalho foi para SQL e Python. Filtrei e agreguei no banco e trouxe para o Python já no grão da análise. E 1,2 milhão cabe em pandas — não precisava de Spark, e eu prefiro não inventar complexidade que o problema não pede."
+> "A base não cabia no Excel: 1,2 milhão de linhas passa do limite de pouco mais de um milhão da planilha. Foi por isso que o trabalho foi para SQL e Python. Filtrei e agreguei no banco e trouxe para o Python já no grão da análise. E 1,2 milhão cabe em pandas, não precisava de Spark, e eu prefiro não inventar complexidade que o problema não pede."
 
 **Por que funciona:** é verificável, explica a escolha de ferramenta por restrição real, e mostra dimensionamento correto nas duas direções.
 
-### Respostas para os 6 ataques mais prováveis
+### O projeto, em 20 segundos
 
-| Pergunta | Resposta |
-|---|---|
-| **"Qual algoritmo?"** | Se foi regressão logística/linear, **defenda, não se desculpe**: *"escolhi por interpretabilidade — o cliente precisava entender por que o modelo apontava um caso, não só receber o score. Modelo que ninguém entende não é seguido."* |
-| **"Qual métrica e qual valor?"** | Se não guardou: *"avaliei com [métrica], mas não guardei o valor exato e não vou chutar. O que eu lembro é a comparação que importava: batia o baseline de [regra atual]."* |
-| **"Como validou?"** | *"Split simples de treino e teste. Hoje eu faria diferente: se houver ordem temporal, split aleatório vaza futuro no treino e infla a performance — o correto é corte temporal. E usaria cross-validation, porque um split só pode ser sorte."* |
-| **"Qual era o baseline?"** | *"A regra que o cliente já usava — [média histórica / critério manual]. Isso importa mais que a métrica absoluta, porque mede valor incremental."* |
-| **"Como tratou 1,2M registros?"** | Agregação no SQL antes; pandas depois; cuidado com tipo de dado; operação vetorizada em vez de `apply`. |
-| **"O modelo foi usado?"** | Se não: *"foi projeto de clube, com escopo de clube. Entregamos análise e recomendação, sem implantação. O que eu levei foi tratamento de dado e definição de problema."* |
+> "Previsão de falta em consulta agendada, 1,2 milhão de registros. Extração e histórico do paciente em SQL com window function, regressão logística no Python por interpretabilidade, validação com split temporal e comparação contra a regra de negócio que já existia. O resultado prático foi dobrar a eficiência da fila de confirmação: a equipe passa a encontrar 45% de faltantes em vez de 21% na mesma capacidade de ligação."
 
-### As 3 armadilhas
+**O projeto completo, rodável, está em `projeto-python/`.** Rode, entenda cada linha, e você fala dele com honestidade.
 
-**1. Vazamento de dados** — *"a checagem que eu faria: para cada variável, no momento real da predição, esse campo já está preenchido? Se não, é suspeito."*
+### Respostas para os ataques mais prováveis
 
-**2. Classe desbalanceada** — nunca cite acurácia. *"Com evento raro, acurácia engana: dizer sempre 'não' acerta 95% e é inútil. Uso precisão, recall e AUC-PR, e o corte sai do custo do falso positivo contra o da perda não detectada."*
+**"Me conta esse projeto."**
+> "O problema era no-show, falta em consulta agendada. Cada falta é um horário de médico que fica vazio e não dá pra revender, então o custo é direto. A pergunta de negócio era concreta: a equipe consegue ligar pra confirmar presença de uma parte das consultas, não de todas, então pra quem ela deve ligar.
+>
+> A base tinha 1,2 milhão de consultas. Fiz a extração em SQL com join da tabela de consultas com a de pacientes, apliquei o filtro de qualidade no banco e calculei o histórico de falta do paciente com window function. No Python usei regressão logística, validei com split temporal e comparei contra a regra que já existia, que era olhar quem tinha espera maior que 30 dias.
+>
+> Deu AUC de 0,68 contra 0,59 da regra. Mas o número que importava pro cliente era outro: priorizando os 10% mais prováveis, a equipe encontra 45% de faltantes em vez de 21% ligando ao acaso."
 
-**3. Query lenta** — *"não tenho experiência de tuning em produção. Pelo conceito: reduzir linha e coluna, filtrar antes de juntar, índice na coluna de join e filtro. Aprofundando, leria o plano de execução — aí já precisaria de ajuda."*
+**"Por que regressão logística e não um modelo mais forte?"**
+> "Por interpretabilidade, e foi escolha consciente. O cliente não ia operar um score que ele não entende. Com a logística eu consigo dizer que o histórico de falta do paciente e os dias de espera são os dois fatores mais fortes, e aí a conversa deixa de ser sobre o modelo e passa a ser sobre o processo: se espera longa aumenta falta, talvez a resposta não seja só ligar, seja encurtar a fila.
+>
+> Testei uma árvore como comparação e o ganho não pagava a perda de leitura. Num projeto de consultoria eu prefiro o modelo que o cliente mantém depois que eu saio."
+
+**"Como você validou?"**
+> "Split temporal, treinando nos primeiros 70% do período e testando no restante. Fiz assim porque existe ordem no dado e é assim que o modelo seria usado na prática, prevendo o próximo mês com o que já passou.
+>
+> Se eu tivesse feito split aleatório, consulta futura entraria no treino e a performance medida seria otimista. É um erro que aparece bonito no notebook e quebra em produção."
+
+**"E vazamento de dados, você checou?"**
+> "Sim, e o ponto crítico estava justamente na feature mais forte. O histórico de falta do paciente é calculado com window function, e o frame termina em 1 PRECEDING, ou seja, exclui a própria consulta que eu estou prevendo. Se eu tivesse incluído a linha atual, o modelo estaria olhando o resultado pra prever o resultado.
+>
+> A checagem que eu faço em geral é perguntar, pra cada variável, se no momento real da predição aquele campo já está preenchido. Se a resposta for não ou depende, é suspeito."
+
+**"Como tratou 1,2 milhão de registros?"**
+> "Essa parte foi mais simples do que parece. 1,2 milhão de linhas cabe em pandas numa máquina comum, então não precisei de nada distribuído. Deixei filtro e agregação no SQL, porque o banco faz isso melhor, e trouxe pro Python só o que eu ia modelar.
+>
+> O detalhe que importa é que não cabia no Excel. O limite da planilha é pouco mais de um milhão de linhas, então a base passava. Foi por isso que o trabalho foi pra SQL e Python, não por preferência de ferramenta. E eu prefiro não inventar complexidade que o problema não pede: falar que usei Spark pra 1,2 milhão de linhas seria exagero."
+
+**"Qual era o baseline?"**
+> "A regra que a operação já usava, priorizar quem tinha espera maior que 30 dias. Ela dá AUC de 0,59, então funciona um pouco, não é aleatória.
+>
+> Essa comparação importa mais que a métrica absoluta, porque mede valor incremental. Um modelo com AUC alto que não bate a regra existente não deveria ir pra produção, e isso acontece mais do que se imagina."
+
+**"Por que não acurácia?"**
+> "Porque ela engana com classe desbalanceada. Nesse caso 79% das consultas têm presença, então um modelo que chuta sempre presença acerta 79% e não identifica ninguém. Boa acurácia e zero utilidade.
+>
+> Usei AUC pra avaliar a ordenação e depois olhei precisão no topo da lista, que é o que realmente importa. A equipe tem capacidade limitada de ligação, então o que interessa é a precisão nos 10% que ela vai trabalhar, não a performance média."
+
+**"O que deu errado?"**
+> "Duas coisas. A primeira foi que criei várias features de especialidade médica e nenhuma teve efeito, os coeficientes ficaram praticamente em zero. Aprendi que criar variável sem hipótese de negócio atrás só gera ruído.
+>
+> A segunda foi mais útil: a minha primeira versão calculava o histórico do paciente sem excluir a consulta atual. A performance veio muito alta e eu desconfiei exatamente por isso, porque estava bom demais. Era vazamento. Corrigir foi mudar o frame da window function, mas eu só achei porque estranhei o resultado bom."
+
+**"Se refizesse hoje, o que mudaria?"**
+> "Três coisas. Usaria cross-validation em vez de um corte temporal só, porque um corte pode ser sorte de um período específico.
+>
+> Testaria um gradient boosting pra saber o tamanho do ganho que eu abri mão ao escolher interpretabilidade. Decidi por logística, mas não medi direito o custo dessa decisão.
+>
+> E a mais importante: ligaria o modelo a um teste de verdade. Hoje eu sei que ele ordena bem, mas não sei se ligar pro paciente reduz a falta. São duas perguntas diferentes, e a segunda é a que o cliente quer. Pra responder, eu precisaria sortear parte da lista priorizada pra não receber ligação e comparar."
+
+**"Query lenta, o que você faz?"**
+> "Não tenho experiência de tuning em produção, então vou pelo conceito. Primeiro olho volume: estou trazendo mais linha ou mais coluna do que preciso. Depois, onde está o filtro, porque filtrar antes de juntar é melhor que juntar tudo e filtrar. Depois, se há índice na coluna de join e de filtro. Aprofundando, eu leria o plano de execução, mas aí já é território em que eu ia precisar de ajuda."
 
 ### Nunca diga
 
@@ -63,13 +104,13 @@
 
 ### O que você fez, em uma frase
 
-> "Na V4 eu era responsável pela análise mensal de DRE, pela modelagem financeira e pelas projeções de fluxo de caixa. O produto final era o relatório que a diretoria usava para decidir a alocação de um orçamento anual superior a R$ 5 milhões — e ao mesmo tempo eu operava a base: conciliação bancária e contas a pagar e receber, mais de 400 transações por mês."
+> "Na V4 eu era responsável pela análise mensal de DRE, pela modelagem financeira e pelas projeções de fluxo de caixa. O produto final era o relatório que a diretoria usava para decidir a alocação de um orçamento anual superior a R$ 5 milhões, e ao mesmo tempo eu operava a base: conciliação bancária e contas a pagar e receber, mais de 400 transações por mês."
 
 **O detalhe que impressiona:** você fazia as duas pontas. Quem nunca tocou no dado bruto não sabe de onde desconfiar.
 
 ### "Como você estruturava a análise de DRE?"
 
-> "Base comparável mês a mês, e o valor analítico não está no número absoluto — está no desvio e na causa do desvio. Eu **decompunha a variação de margem em volume, preço, mix e custo**, porque cada um pede uma ação diferente: volume é comercial, preço é pricing, mix é sortimento, custo é compra."
+> "Base comparável mês a mês, e o valor analítico não está no número absoluto, está no desvio e na causa do desvio. Eu **decompunha a variação de margem em volume, preço, mix e custo**, porque cada um pede uma ação diferente: volume é comercial, preço é pricing, mix é sortimento, custo é compra."
 
 ☝️ **Essa decomposição é a frase de maior retorno do bloco.** É o que liga finanças a Gestão de Categoria, o pilar nº 1 da ATY.
 
@@ -125,20 +166,49 @@ Com custo de capital de 20% a.a.:
 
 ## BLOCO 3 — O Projeto da ATY
 
+### A equipe, e quem provavelmente te entrevista
+
+**Nicole Gradice Silva** · Senior Data Scientist desde set/2025 · Física Computacional (USP)
+Entre as competências declaradas dela está **"otimização de rotas e malhas logísticas"**. É quase certo que **ela seja a responsável técnica pelo projeto de malha**, e provável que seja sua gestora direta.
+
+O ponto mais importante: ela entrou na ADVISIA como **Data Scientist Jr vindo de Analista de Planejamento na Carglass**, um cargo de operação. Subiu quatro níveis em quatro anos. **Ela fez exatamente a transição que você quer fazer.** Tem o McKinsey Forward (structured problem solving, que você ensina) e faz elasticidade de preço.
+
+> "Vi que você entrou na ADVISIA como Data Scientist Jr vindo de um cargo de planejamento na Carglass. Estou numa transição parecida, saindo de um papel financeiro pra analytics. Como foi essa passagem, e o que foi mais difícil de aprender que a graduação não tinha dado?"
+
+> "Vi otimização de rotas e malhas entre as suas competências. No projeto de malha, o gargalo tem sido mais o modelo de otimização ou a qualidade do dado de origem e destino?"
+
+A segunda pergunta é forte porque **a resposta quase sempre é "o dado"**, e aí você oferece exatamente onde um júnior ajuda.
+
+**Gilberto Volpe** · Sócio · reduziu ruptura de 10% para 5% na Ultrapar e implantou Oracle Retail Demand Forecast. Já viveu malha e estoque **do lado do cliente**.
+
+**André Shirassu** · Partner · risco de crédito no HSBC e Elo, pós em Finanças Corporativas na FIA. **Split payment, antecipação e custo de capital são a língua dele.**
+
+**Divisão provável do projeto:** Gilberto no enquadramento e cliente · André no rigor e no impacto financeiro · Nicole na otimização de rede · **vaga júnior na extração, no baseline de custo-servir, na planilha e na documentação**. A última linha é a descrição da vaga.
+
 ### Malha logística — as 4 frentes
 
 Você não captou as quatro. **Pergunte** — prova que você pensou depois da conversa.
 
 **Hipótese mais provável (por tema):**
 
-```
-1. DIAGNÓSTICO E CUSTO-SERVIR   fluxo origem-destino, custo por rota/loja
-2. FOOTPRINT                    quantos CDs, onde, que capacidade
-3. ESTOQUE E ALOCAÇÃO           o que estoca onde, nível de serviço
-4. TRANSPORTE E ABASTECIMENTO   modal, frota, frequência, roteirização
-```
+| # | Frente | O que entrega | Seu encaixe |
+|---|---|---|---|
+| **1** | **Diagnóstico e custo-servir** | Baseline: quanto custa servir cada loja e rota | **Alto.** 80% é extração, tratamento e reconciliação |
+| **2** | **Footprint** | Quantos CDs, onde, e em que volume a resposta muda | **Médio.** Matriz origem-destino, cenários |
+| **3** | **Estoque e alocação** | O que fica onde, com que nível de serviço | **Médio-alto.** ABC/XYZ, desvio da demanda, capital |
+| **4** | **Transporte e abastecimento** | Modal, frequência, rota, consolidação | **Médio.** Tabela de frete, custo por rota, planilha |
 
-**Alternativas:** por etapa (dados → modelagem → simulação → implementação) ou com uma frente de **sourcing/negociação** — o que explicaria a planilha.
+**Alternativas:** por etapa (dados → modelagem → simulação → implementação), ou com uma frente própria de **sourcing e negociação**, que explicaria diretamente a planilha.
+
+**Por onde você começaria, se perguntarem:**
+> "Pela frente 1, e não por gosto, por dependência. Sem custo-servir consolidado, a otimização de footprint roda em cima de premissa e entrega número bonito e errado. E costuma ser a frente que mais consome tempo, porque o dado está espalhado: frete no financeiro, volume no sistema de armazém, cadastro de peso e cubagem incompleto. É pouco glamouroso e é o caminho crítico."
+
+**Dois números a mais para a frente 3:**
+```
+Estoque de segurança = z × desvio da demanda × raiz(lead time)
+Nível de serviço 95% → 99%  =  z de 1,65 → 2,33  =  +41% de estoque
+```
+> "Por isso nível de serviço é decisão econômica e não meta institucional. Em SKU de margem e giro altos compensa 99%; em cauda longa, não."
 
 ### O conceito que você precisa ter na ponta: regra do √N
 
@@ -160,7 +230,7 @@ Estoque de segurança com N locais  ≈  centralizado × √N
 | Receita de equilíbrio do 2º CD | **~R$ 650 M** (~65ª loja) |
 | **Transit point** (transbordo sem estoque) | **+R$ 0,93 M/ano** (vale hoje) |
 
-> "A decisão não é 'se', é 'quando' — e o gatilho é volume transportado, não número de lojas. E transit point não aparece se a pergunta for tratada como binária entre um e dois CDs."
+> "A decisão não é 'se', é 'quando', e o gatilho é volume transportado, não número de lojas. E transit point não aparece se a pergunta for tratada como binária entre um e dois CDs."
 
 ### Planilha de negociação — sua porta de entrada
 
@@ -205,7 +275,7 @@ Rede de R$ 400 M/ano, carga ~27%, float atual ~25 dias, custo de capital 20%
    Recebível de cartão: 23,3 → 17,0 M          −27%
 ```
 
-> "Split payment não aumenta a carga — antecipa o desembolso. E ele faz duas coisas ao mesmo tempo: aumenta a necessidade de capital de giro de forma permanente e reduz o instrumento usado hoje para cobri-la. A necessidade sobe e a cobertura desce — por isso não se resolve antecipando mais."
+> "Split payment não aumenta a carga, antecipa o desembolso. E ele faz duas coisas ao mesmo tempo: aumenta a necessidade de capital de giro de forma permanente e reduz o instrumento usado hoje para cobri-la. A necessidade sobe e a cobertura desce, por isso não se resolve antecipando mais."
 
 ### A unificação — as três coisas são a mesma conta
 
@@ -277,10 +347,10 @@ Alongar prazo de fornecedor de 30 → 45 dias (compras de R$ 260 M/ano)
 > **A frase mais forte que você tem:** *"a inadimplência caiu, mas eu não tinha grupo de controle. Então defendo a redução do prazo de cobrança, que é o efeito de primeira ordem; o efeito total eu trato como hipótese, não como conclusão."*
 
 **3. Velocidade de aprendizado** — curva curta em ferramenta nova
-> *"Sempre com um problema concreto no meio. E meu teste de que entendi é conseguir explicar — se eu não consigo ensinar, eu não entendi, só reconheci."*
+> *"Sempre com um problema concreto no meio. E meu teste de que entendi é conseguir explicar. Se eu não consigo ensinar, eu não entendi, só reconheci."*
 
 **4. Comunicação** — recomendação antes do método
-> *"Ninguém decide com AUC. 'O modelo acerta 7 de cada 10 na lista prioritária, então quem investiga 100 casos por mês vai achar 70 em vez de 20' — isso decide."*
+> *"Ninguém decide com AUC. 'O modelo acerta 7 de cada 10 na lista prioritária, então quem investiga 100 casos por mês vai achar 70 em vez de 20'. Isso decide."*
 
 ### Calibragem honesta das ferramentas
 
@@ -295,7 +365,7 @@ Alongar prazo de fornecedor de 30 → 45 dias (compras de R$ 260 M/ano)
 
 ### O posicionamento, em uma frase
 
-> "Não sou o modelador mais forte que vocês vão entrevistar. Sou quem já sentou na cadeira de quem decide com o número — DRE, margem, risco de crédito, fluxo de caixa — e tenho Python e SQL para sujar a mão no dado desde o primeiro dia. A modelagem eu aprendo com vocês; a parte de negócio eu já trago."
+> "Não sou o modelador mais forte que vocês vão entrevistar. Sou quem já sentou na cadeira de quem decide com o número: DRE, margem, risco de crédito, fluxo de caixa. E tenho Python e SQL para sujar a mão no dado desde o primeiro dia. A modelagem eu aprendo com vocês; a parte de negócio eu já trago."
 
 ---
 
@@ -328,7 +398,7 @@ Variação conjunta          (1 + %ΔP) × (1 + %ΔQ) − 1
 
 ### Notícia para citar
 Pesquisa da **Kyndryl**: cerca de **76% das empresas brasileiras** temem que a IA avance além da sua capacidade operacional, governança e preparo de equipe.
-> "Isso me pareceu exatamente a tese da oferta de Estratégia de Dados e IA de vocês — e explica por que governança aparece antes de agente na descrição."
+> "Isso me pareceu exatamente a tese da oferta de Estratégia de Dados e IA de vocês, e explica por que governança aparece antes de agente na descrição."
 
 ### Erros que eliminam
 ✗ Inflar resultado · ✗ blefar em ferramenta · ✗ afirmar causalidade sem contrafactual · ✗ não ter lido o site · ✗ falar de IA como solução universal · ✗ se vender como gênio solitário · ✗ não ter perguntas
