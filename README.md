@@ -56,6 +56,20 @@ Fonte em [briefing/](briefing/). Para regerar: `python3 build_briefing.py`
 
 ---
 
+## 🐍 Projeto Python + SQL (rodável)
+
+**[projeto-python/](projeto-python/)** — implementação completa do projeto equivalente ao do currículo, na forma mais simples que funciona: previsão de falta em consulta sobre 1,2 milhão de registros, com extração em SQL (window function sem vazamento), regressão logística e comparação contra baseline.
+
+```bash
+pip install pandas numpy scikit-learn
+python3 projeto-python/00_gerar_base.py   # base sintética, 1,2M consultas
+python3 projeto-python/02_modelo.py       # AUC 0,681 vs 0,586 da regra
+```
+
+O [README do projeto](projeto-python/README.md) traz o roteiro de resposta em primeira pessoa para cada pergunta provável de entrevista.
+
+---
+
 ## 📕 Relatório ATY Consulting
 
 **[Relatorio-ATY-Consulting.pdf](Relatorio-ATY-Consulting.pdf)** — relatório de preparação para o processo seletivo da [ATY Consulting](https://www.atyconsulting.com/), com 91 páginas: análise da empresa (4 ofertas, 3 valores, 4 clientes), perfil dos sócios e pontos de conexão, diagnóstico de fit e gaps, 7 cases STAR, 45 perguntas (técnicas e de fit) com respostas, pitches e plano de 30 dias.
