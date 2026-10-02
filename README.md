@@ -48,6 +48,14 @@
 
 ---
 
+## 📄 Briefing Pré-Entrevista (leia este primeiro)
+
+**[Briefing-Pre-Entrevista-ATY.pdf](Briefing-Pre-Entrevista-ATY.pdf)** — 7 páginas de consulta rápida, para revisar na véspera. Quatro blocos: como responder sobre o projeto em Python/SQL, como responder sobre modelagem financeira, o projeto de malha logística da ATY (frentes, planilha de negociação, split payment) e o que se espera de um júnior. Termina com colinha de números e fórmulas.
+
+Fonte em [briefing/](briefing/). Para regerar: `python3 build_briefing.py`
+
+---
+
 ## 📕 Relatório ATY Consulting
 
 **[Relatorio-ATY-Consulting.pdf](Relatorio-ATY-Consulting.pdf)** — relatório de preparação para o processo seletivo da [ATY Consulting](https://www.atyconsulting.com/), com 91 páginas: análise da empresa (4 ofertas, 3 valores, 4 clientes), perfil dos sócios e pontos de conexão, diagnóstico de fit e gaps, 7 cases STAR, 45 perguntas (técnicas e de fit) com respostas, pitches e plano de 30 dias.
