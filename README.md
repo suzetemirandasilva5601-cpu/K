@@ -69,6 +69,28 @@ Cada um traz a árvore completa, a versão de 30 segundos, as perguntas de clari
 
 ---
 
+## 🎞️ Apresentações para Consultoria (deck CCU)
+
+**[CCU - Apresentacoes para consultoria.pptx](CCU%20-%20Apresentacoes%20para%20consultoria.pptx)** — módulo de 19 slides sobre como montar apresentações de consultoria, construído na identidade visual do CCU: tema, layouts, fontes (Kanit / Work Sans), paleta `#C1272D` / `#161616`, cunha vermelha, rodapé e logo herdados do deck oficial `08. Finanças para case 2026.2.pptx`.
+
+Quatro seções, com ícones e exhibits desenhados no próprio PowerPoint (editáveis):
+
+- **01 · Estrutura antes do slide** — pirâmide de Minto, SCQA e o par MECE + ghost deck
+- **02 · Anatomia do slide** — os seis elementos fixos e o action title (antes × depois)
+- **03 · Dados e formatação** — as cinco comparações de Zelazny, Harvey balls / waterfall / 2×2 / status e as regras de formatação
+- **04 · Revisão e entrega** — checklist de dez itens, os seis erros frequentes, key takeaways e leitura recomendada com links
+
+Para regerar após editar o conteúdo:
+
+```bash
+pip install python-pptx
+python3 gerar_apresentacao_consultoria.py
+```
+
+O gerador copia o deck oficial, troca apenas os slides e preserva as fontes embutidas. Ícones do [Material Symbols](https://github.com/google/material-design-icons) (Apache 2.0) em [apresentacao-consultoria/icons/](apresentacao-consultoria/icons/); créditos e tokens visuais em [apresentacao-consultoria/NOTICE.md](apresentacao-consultoria/NOTICE.md).
+
+---
+
 ## 🎙️ Simulador de Case por Voz
 
 **[prompts/prompt-simulador-case.md](prompts/prompt-simulador-case.md)** — prompt pronto para colar numa IA com modo de voz. A IA assume o papel de entrevistador e conduz um case completo da abertura à recomendação final.

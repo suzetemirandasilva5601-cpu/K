@@ -30,3 +30,6 @@ projeto-python/saude.db
 
 # Libs Python instaladas localmente (target de pip install)
 .pylibs/
+
+# Ativos extraidos do deck oficial em tempo de build
+apresentacao-consultoria/assets/
