@@ -272,190 +272,216 @@ def add_tab(cols, linhas, fonte=8.5):
 
 SEC = len(h1s) + 1
 
-add_h('%d. Areas e Posicoes em Aberto' % SEC, 1)
-add_p('Esta secao cruza o quadro atual de ativos com as {tv} posicoes em aberto da base de vagas '
-      '(21/10). A leitura central e a distincao entre "Aumento de Quadro", que expande a estrutura, '
-      'e "Vaga Substituicao", que apenas repoe uma saida e nao altera o headcount projetado.'.format(
-          tv=TOT_VAGAS))
+# ---------------------------------------------------------------------------
+# Blocos operacionais pedidos pela area: EUA, Europa e Brasil.
+# A classificacao e feita pelo CARGO, nao pela AREA, porque termos como
+# INLAND, AMERICAS, EUROPA, WH, CC e EXPORT so existem em "CARGO DRE 2026.2".
+# ---------------------------------------------------------------------------
+BLOCOS = [
+    'EUA / Inland Freight America',
+    'EUA / Operacoes America',
+    'EUA / Warehouses (MIA, Houston, NY)',
+    'Europa / Inland Freight Europa',
+    'Europa / Operacoes Europa',
+    'Brasil / Customer Care',
+    'Brasil / Exportacao',
+]
 
-add_tab(['Indicador', 'Valor'], [
-    ['Posicoes em aberto (total)', TOT_VAGAS],
-    ['Aumento de quadro', '%d (%s)' % (TOT_AUM, pct(TOT_AUM, TOT_VAGAS))],
-    ['Vaga substituicao', '%d (%s)' % (TOT_SUB, pct(TOT_SUB, TOT_VAGAS))],
-    ['Custo mensal das vagas', brl(TOT_CUSTO_V)],
-    ['Custo mensal atual (ativos)', brl(CUSTO_A)],
-    ['Custo das vagas sobre a folha atual', pct(TOT_CUSTO_V, CUSTO_A)],
-    ['Headcount atual (ativos)', N_A],
-    ['Headcount projetado (ativos + aumento de quadro)', HC_PROJ],
-    ['Crescimento projetado do quadro', pct(TOT_AUM, N_A)],
-    ['Vagas cujo cargo ja existe na base', '%d (%s)' % (N_CG_EXIST, pct(N_CG_EXIST, TOT_VAGAS))],
-    ['Vagas de cargo novo (nao existe na base)', '%d (%s)' % (N_CG_NOVO, pct(N_CG_NOVO, TOT_VAGAS))],
-], fonte=9.5)
 
-# ---- dicionario de equivalencia ----
-add_h('%d.1 Como as duas planilhas se correlacionam' % SEC, 2)
-add_p('As duas bases usam nomenclaturas diferentes, o que dificulta o cruzamento direto. '
-      'Ha dois pontos de atencao:')
-add_p('A planilha de vagas grava a area em caixa mista e as vezes com nome curto '
-      '("Healthcare"), enquanto a base de setembro usa caixa alta e nome completo '
-      '("HEALTHCARE INDUSTRY"). A tabela abaixo e o dicionario usado neste documento.',
-      style='List Bullet')
-add_p('Termos como "INLAND", "EUROPA", "USA" ou "ASIA" NAO existem na coluna AREA da base. '
-      'Eles aparecem apenas na coluna "CARGO DRE 2026.2" (por exemplo AIR OPS ANALYST INLAND USA, '
-      'hoje com {hc} ativos). Por isso a busca por "inland" entre as areas nao retorna resultado: '
-      'a correlacao desses termos tem de ser feita por cargo, como na tabela {s}.3.'.format(
-          hc=base_cargo_hc.get('AIR OPS ANALYST INLAND USA', 0), s=SEC),
-      style='List Bullet')
-add_p('O C-Level tambem muda de nome entre as planilhas. A base de setembro registra CMO e nao '
-      'possui CCO; a planilha de vagas e a DRE de agosto registram CCO e nao possuem CMO. '
-      'Trata-se da mesma estrutura, como mostra a tabela de equivalencia abaixo: as areas e os '
-      'headcounts coincidem. Ao cruzar vagas com a base, CCO deve ser lido como CMO.',
-      style='List Bullet')
+def bloco(cargo):
+    c = str(cargo).upper()
+    if 'WH ' in c or 'WAREHOUSE' in c:
+        return 'EUA / Warehouses (MIA, Houston, NY)'
+    if 'INLAND USA' in c or 'INLAND AMERICAS' in c:
+        return 'EUA / Inland Freight America'
+    if 'AMERICAS' in c:
+        return 'EUA / Operacoes America'
+    if 'INLAND EUROPA' in c:
+        return 'Europa / Inland Freight Europa'
+    if 'EUROPA' in c:
+        return 'Europa / Operacoes Europa'
+    if c.startswith('AIR CC') or c.startswith('OCEAN CC'):
+        return 'Brasil / Customer Care'
+    if 'EXPORT' in c:
+        return 'Brasil / Exportacao'
+    return None
 
-# equivalencia de C-Level entre DRE/vagas (CCO) e base de setembro (CMO)
-try:
-    _dre = openpyxl.load_workbook('Baseline DRE 26.2.xlsx', data_only=True)['Baseline ativos agosto']
-    _D = [r for r in _dre.iter_rows(min_row=2, values_only=True) if r[2]]
-    _cco = Counter(str(r[1]).strip() for r in _D if str(r[0]).strip() == 'CCO')
-    _cmo = Counter(r[B_AREA] for r in ATIVOS if r[14] == 'CMO')
-    _eq = {'Energy': 'ENERGY INDUSTRY', 'Aerospace': 'AEROSPACE INDUSTRY',
-           'Automotive': 'AUTOMOTIVE INDUSTRY', 'Healthcare': 'HEALTHCARE INDUSTRY',
-           'Industries Development': 'INDUSTRIES DEVELOPMENT'}
-    _ln = []
-    for k in sorted(_cco, key=lambda x: -_cco[x]):
-        tgt = _eq.get(k, k.upper())
-        _ln.append(['CCO / %s' % k, _cco[k], 'CMO / %s' % tgt, _cmo.get(tgt, 0),
-                    'igual' if _cco[k] == _cmo.get(tgt, 0) else 'divergente'])
-    add_tab(['DRE agosto e vagas (CCO)', 'HC', 'Base setembro (CMO)', 'HC ativos', 'Confere'],
-            _ln, fonte=8.5)
-    add_nota('As areas COLD CHAIN, OTHER INDUSTRIES e a linha combinada AUTOMOTIVE INDUSTRY & '
-             'INDUSTRIES DEVELOPMENT existem apenas na base de setembro sob CMO, o que explica a '
-             'diferenca entre os {a} ativos de CMO e os {b} registros de CCO na DRE de agosto.'.format(
-                 a=sum(_cmo.values()), b=sum(_cco.values())))
-except Exception as _e:  # pragma: no cover
-    print('aviso: equivalencia de C-Level nao gerada (%s)' % _e)
+
+b_at = Counter()
+b_head = defaultdict(Counter)
+b_vg = Counter()
+b_aum = Counter()
+b_sub = Counter()
+b_cst = defaultdict(float)
+b_mes = defaultdict(Counter)
+b_st = defaultdict(Counter)
+for r in ATIVOS:
+    b = bloco(r[B_CARGO])
+    if b:
+        b_at[b] += 1
+        b_head[b][r[B_HEAD]] += 1
+for r in VG:
+    b = bloco(r[V_CARGO])
+    if b:
+        b_vg[b] += 1
+        b_cst[b] += num(r[V_CUSTO])
+        b_mes[b][str(r[13]).strip()] += 1
+        s = str(r[V_STATUS]).upper()
+        b_st[b]['publicada' if 'ABERTA' in s else
+                ('fechada' if 'FECHADA' in s else 'sem status')] += 1
+        if eh_aumento(r):
+            b_aum[b] += 1
+        else:
+            b_sub[b] += 1
+
+# Volume de referencia do CIS (embarques/mes, media abr a set/26), informado
+# pela area. O CIS nao informa headcount por area, portanto o volume e
+# atribuido ao bloco geografico e nao a pessoa.
+CIS_AEREO = {'EUA': 970, 'Europa': 530,
+             'Brasil / Customer Care': 2287, 'Brasil / Exportacao': 244}
+CIS_MARIT = {'EUA': 139, 'Brasil / Exportacao': 55}
+EUA_BLOCOS = [b for b in BLOCOS if b.startswith('EUA')]
+EUR_BLOCOS = [b for b in BLOCOS if b.startswith('Europa')]
+at_eua = sum(b_at[b] for b in EUA_BLOCOS)
+at_eur = sum(b_at[b] for b in EUR_BLOCOS)
+at_cc = b_at['Brasil / Customer Care']
+at_ex = b_at['Brasil / Exportacao']
+
+TOT_AT_OP = sum(b_at[b] for b in BLOCOS)
+TOT_VG_OP = sum(b_vg[b] for b in BLOCOS)
+
+
+def dono(b):
+    return ' / '.join(str(h).title() for h, _ in b_head[b].most_common(2) if h)
+
+
+def ocup(b):
+    """% do quadro em aberto = vagas / (ativos + vagas)."""
+    d = b_at[b] + b_vg[b]
+    return pct(b_vg[b], d) if d else 'n/a'
+
+
+add_h('%d. Vagas em Aberto x Ocupacao nas Operacoes' % SEC, 1)
+add_p('Cruzamento entre a estrutura de Operacoes e as {tv} posicoes em aberto (base de vagas de '
+      '21/10), bloco por bloco. Os blocos sao identificados pelo cargo e nao pela area, porque '
+      'termos como INLAND, AMERICAS, EUROPA, WH, CC e EXPORT existem apenas na coluna '
+      '"CARGO DRE 2026.2" da base de setembro. Dos {tv} cargos em aberto, {ce} ja existem na '
+      'estrutura e {cn} sao cargos novos; ao cruzar as planilhas, CCO deve ser lido como CMO e '
+      '"Healthcare" como "HEALTHCARE INDUSTRY".'.format(tv=TOT_VAGAS, ce=N_CG_EXIST, cn=N_CG_NOVO))
+
+# ---- 11.1 panorama ----
+add_h('%d.1 Ocupacao, vagas e volume por bloco' % SEC, 2)
+add_p('Tres metricas por bloco: percentual do quadro em aberto, volume de embarques por ativo e '
+      'estagio do processo. O volume vem do CIS, media de abril a setembro de 2026.')
 
 linhas = []
-for orig in sorted({str(r[V_AREA]).strip() for r in VG}):
-    ab = area_base(orig)
-    linhas.append([orig, ab if ab else 'sem equivalente',
-                   base_hc.get(ab, 0) if ab else 0,
-                   'correlacionada' if ab else 'area nova'])
-add_tab(['Area na planilha de vagas', 'Area correspondente na base de setembro',
-         'HC atual na base', 'Situacao'], linhas, fonte=8.5)
+for b in BLOCOS:
+    if b.startswith('EUA'):
+        vol = '%d (bloco EUA)' % CIS_AEREO['EUA']
+        vpa = '%.0f' % ((CIS_AEREO['EUA'] + CIS_MARIT['EUA']) / at_eua) if at_eua else 'n/a'
+    elif b.startswith('Europa'):
+        vol = '%d (bloco Europa)' % CIS_AEREO['Europa']
+        vpa = '%.0f' % (CIS_AEREO['Europa'] / at_eur) if at_eur else 'n/a'
+    elif b == 'Brasil / Customer Care':
+        vol = '%d' % CIS_AEREO[b]
+        vpa = '%.0f' % (CIS_AEREO[b] / at_cc) if at_cc else 'n/a'
+    else:
+        vol = '%d' % CIS_AEREO[b]
+        vpa = '%.0f' % ((CIS_AEREO[b] + CIS_MARIT[b]) / at_ex) if at_ex else 'n/a'
+    linhas.append([b, b_at[b], b_vg[b], ocup(b), b_aum[b], b_sub[b],
+                   vol, vpa, brl(b_cst[b]), dono(b)])
+linhas.append(['TOTAL blocos de Operacoes', TOT_AT_OP, TOT_VG_OP,
+               pct(TOT_VG_OP, TOT_AT_OP + TOT_VG_OP),
+               sum(b_aum[b] for b in BLOCOS), sum(b_sub[b] for b in BLOCOS),
+               '', '', brl(sum(b_cst[b] for b in BLOCOS)), ''])
+add_tab(['Bloco', 'Ativos', 'Vagas', '% quadro aberto', 'Aumento', 'Subst.',
+         'Embarques aereos/mes (CIS)', 'Embarques por ativo', 'Custo vagas', 'Dono'],
+        linhas, fonte=7)
 
-# ---- projecao por area ----
-add_h('%d.2 Quadro atual, vagas e projecao por area' % SEC, 2)
-add_p('Areas ordenadas pelo numero de posicoes em aberto. A projecao e o crescimento consideram '
-      'apenas as vagas de aumento de quadro, pois as substituicoes repoem posicoes ja existentes.')
-linhas = []
-for a in sorted(vg, key=lambda x: (-vg[x]['n'], x)):
-    d = vg[a]
-    hc = base_hc.get(a, 0)
-    proj = hc + d['aum']
-    linhas.append([a, ', '.join(k for k, _ in d['cl'].most_common()), hc, d['n'],
-                   d['aum'], d['sub'], proj,
-                   pct(d['aum'], hc) if hc else 'area nova', brl(d['cost'])])
-linhas.append(['TOTAL', '', N_A, TOT_VAGAS, TOT_AUM, TOT_SUB, HC_PROJ,
-               pct(TOT_AUM, N_A), brl(TOT_CUSTO_V)])
-add_tab(['Area (nomenclatura da base)', 'C-Level', 'HC atual', 'Vagas', 'Aumento',
-         'Subst.', 'HC projetado', 'Cresc.', 'Custo vagas'], linhas, fonte=7.5)
+add_nota('O volume por ativo do bloco EUA inclui os {m} embarques maritimos de Miami e o de '
+         'Exportacao inclui os {e} maritimos. Nova York nao aparece como escritorio no CIS e '
+         'precisa ser confirmada com a Operacao. Houston cresce: media de {h} por mes no periodo, '
+         'porem {hc} por mes entre julho e setembro, alta de {ha}.'.format(
+             m=CIS_MARIT['EUA'], e=CIS_MARIT['Brasil / Exportacao'], h=94, hc=169,
+             ha=pct(169 - 94, 94)))
 
-# ---- correlacao por cargo ----
-add_h('%d.3 Correlacao vaga a vaga por cargo' % SEC, 2)
-add_p('Cada posicao em aberto com o cargo exatamente como aparece nas duas planilhas. '
-      'A coluna "HC atual no cargo" mostra quantos ativos ja ocupam aquele mesmo cargo na base '
-      'de setembro, o que permite localizar na base cargos como AIR OPS ANALYST INLAND USA. '
-      'A marcacao "cargo novo" indica posicao que ainda nao existe na estrutura atual.')
-
-linhas = []
-ordenadas = sorted(VG, key=lambda r: (str(area_base(r[V_AREA]) or 'ZZZ'),
-                                      str(r[V_CARGO]).strip().upper()))
-for r in ordenadas:
-    cg = str(r[V_CARGO]).strip().upper()
-    ab = area_base(r[V_AREA])
-    hc_cargo = base_cargo_hc.get(cg, 0)
-    existe = cg in base_cargos
-    st = str(r[V_STATUS]).strip()
-    if st in ('', 'None'):
-        st = 'nao informado'
-    linhas.append([ab if ab else '%s (nova)' % str(r[V_AREA]).strip(),
-                   str(r[V_CARGO]).strip(),
-                   hc_cargo if existe else 'cargo novo',
-                   'Aumento' if eh_aumento(r) else 'Substituicao',
-                   st, str(r[V_MES]).strip(), brl(num(r[V_CUSTO]))])
-add_tab(['Area (base)', 'Cargo (planilha de vagas)', 'HC atual no cargo', 'Tipo',
-         'Status', 'Inicio', 'Custo/mes'], linhas, fonte=7)
-
-add_nota('Dos {tv} cargos em aberto, {ce} ja existem na base de setembro e {cn} sao cargos novos. '
-         'Entre os cargos novos aparecem funcoes de estruturacao (COMPENSATION TL, DATA ENGIN TL, '
-         'CYBER SEC SPEC, INTR ACCT FIN TL), o que indica criacao de competencias que a empresa '
-         'ainda nao possui.'.format(tv=TOT_VAGAS, ce=N_CG_EXIST, cn=N_CG_NOVO))
-
-# ---- areas sem vagas ----
-add_h('%d.4 Areas sem nenhuma posicao em aberto' % SEC, 2)
-sem = sorted([(a, base_hc[a]) for a in base_hc if a not in vg], key=lambda x: -x[1])
-add_p('{n} das {t} areas da base nao possuem qualquer posicao em aberto. Cruzando com a secao de '
-      'areas sub-dimensionadas, estas sao as que seguem sem plano de reforco.'.format(
-          n=len(sem), t=len(base_hc)))
-add_tab(['Area', 'HC atual', 'Vagas'], [[a, h, 0] for a, h in sem], fonte=9)
-
-# ---- insights do cruzamento ----
-add_h('%d.5 Insights do cruzamento entre areas e vagas' % SEC, 2)
-
-_ao = base_hc.get('AIR OPERATIONS', 0)
-_ao_aum = vg['AIR OPERATIONS']['aum'] if 'AIR OPERATIONS' in vg else 0
-_ao_proj = _ao + _ao_aum
-add_p('A concentracao em Air Operations aumenta em vez de diluir. A area sai de {a} para {p} '
-      'pessoas e sua participacao no quadro passa de {s1} para {s2}, porque {au} das {t} vagas de '
-      'aumento de quadro estao nela. O plano de contratacao reforca a dependencia da frente Air '
-      'ja apontada como risco.'.format(
-          a=_ao, p=_ao_proj, s1=pct(_ao, N_A), s2=pct(_ao_proj, HC_PROJ),
-          au=_ao_aum, t=TOT_AUM),
+# ---- 11.2 pontos de atencao ----
+add_h('%d.2 Onde esta o maior ponto de atencao' % SEC, 2)
+_top = sorted(BLOCOS, key=lambda b: -(b_vg[b] / (b_at[b] + b_vg[b]) if b_at[b] + b_vg[b] else 0))
+_b1, _b2 = _top[0], _top[1]
+add_p('Quadro mais vazio: {b1} com {o1} do quadro em aberto ({a1} ativos e {v1} vagas) e {b2} com '
+      '{o2} ({a2} ativos e {v2} vagas). Sao os dois blocos onde a operacao roda com metade da '
+      'equipe prevista.'.format(
+          b1=_b1, o1=ocup(_b1), a1=b_at[_b1], v1=b_vg[_b1],
+          b2=_b2, o2=ocup(_b2), a2=b_at[_b2], v2=b_vg[_b2]),
+      style='List Bullet')
+add_p('Maior volume por pessoa: Exportacao Brasil absorve cerca de {v} embarques por ativo ao mes '
+      'com apenas {a} pessoas e {o} do quadro em aberto. Customer Care vem em seguida, com cerca '
+      'de {vc} por ativo, porem com equipe de {ac} pessoas e somente {oc} em aberto.'.format(
+          v='%.0f' % ((CIS_AEREO['Brasil / Exportacao'] + CIS_MARIT['Brasil / Exportacao']) / at_ex),
+          a=at_ex, o=ocup('Brasil / Exportacao'),
+          vc='%.0f' % (CIS_AEREO['Brasil / Customer Care'] / at_cc), ac=at_cc,
+          oc=ocup('Brasil / Customer Care')),
+      style='List Bullet')
+add_p('Risco silencioso nos Warehouses: {a} pessoas cobrem tres pracas (MIA, Houston e NY) e o '
+      'bloco nao tem nenhuma vaga aberta, mesmo com Houston crescendo {ha}. E o unico bloco de '
+      'Operacoes sem reforco previsto.'.format(
+          a=b_at['EUA / Warehouses (MIA, Houston, NY)'], ha=pct(169 - 94, 94)),
+      style='List Bullet')
+_sem_st = sum(b_st[b]['sem status'] for b in BLOCOS)
+add_p('Vaga parada ha mais tempo: a unica posicao com ciclo iniciado em marco e PER DEP ANALYST, '
+      'em Talent Management Team, cerca de 7 meses em aberto. Nos blocos de Operacoes nao ha vaga '
+      'anterior a outubro, porem {s} das {t} vagas estao sem estagio de processo informado, o que '
+      'impede medir o tempo real de cada uma.'.format(s=_sem_st, t=TOT_VG_OP),
       style='List Bullet')
 
-_sv_hc = base_hc.get('SERVICES', 0)
-_sv_aum = vg['SERVICES']['aum'] if 'SERVICES' in vg else 0
-_sv_n = vg['SERVICES']['n'] if 'SERVICES' in vg else 0
-add_p('Services e a maior aposta relativa: sai de {a} para {p} pessoas, crescimento de {c}, com '
-      '{n} vagas todas de aumento de quadro. E a unica area que muda de patamar, deixando de ser '
-      'uma posicao isolada para virar um time.'.format(
-          a=_sv_hc, p=_sv_hc + _sv_aum, c=pct(_sv_aum, _sv_hc), n=_sv_n),
-      style='List Bullet')
+# ---- 11.3 plano de acao ----
+add_h('%d.3 Plano de acao para a reuniao de 30 minutos' % SEC, 2)
+add_p('Uma linha por frente critica, com acao, responsavel e prazo de efeito.')
+ACOES = [
+    ['Europa / Inland Freight Europa', ocup('Europa / Inland Freight Europa'),
+     'Reaproveitar finalistas de processos recentes e indicacao interna com bonus',
+     dono('Europa / Inland Freight Europa') + ' + RH', '1 a 3 semanas'],
+    ['EUA / Operacoes America', ocup('EUA / Operacoes America'),
+     'Vaga pre-aprovada com faixa e budget definidos, processo enxuto e cobertura '
+     'temporaria pelo Brasil no back-office',
+     dono('EUA / Operacoes America') + ' + RH', 'Imediato'],
+    ['Brasil / Exportacao', ocup('Brasil / Exportacao'),
+     'Processo enxuto e busca de profissionais de contratos encerrados, verificando '
+     'nao aliciamento',
+     dono('Brasil / Exportacao') + ' + RH', 'Imediato a 4 semanas'],
+    ['EUA / Inland Freight America', ocup('EUA / Inland Freight America'),
+     'Indicacao interna com bonus; as tres vagas ja estao publicadas',
+     dono('EUA / Inland Freight America') + ' + RH', '2 a 3 semanas'],
+    ['EUA / Warehouses (MIA, Houston, NY)', ocup('EUA / Warehouses (MIA, Houston, NY)'),
+     'Validar necessidade de abrir vaga e contratar temporarios ou agencia para as tres pracas',
+     dono('EUA / Warehouses (MIA, Houston, NY)') + ' + RH', '1 a 2 semanas'],
+    ['Europa / Operacoes Europa', ocup('Europa / Operacoes Europa'),
+     'Processo enxuto com triagem em 48 horas e proposta em 24 horas',
+     dono('Europa / Operacoes Europa') + ' + RH', 'Imediato'],
+    ['Brasil / Customer Care', ocup('Brasil / Customer Care'),
+     'Processo enxuto e acompanhamento do volume por ativo',
+     dono('Brasil / Customer Care') + ' + RH', 'Imediato'],
+    ['Talent Management Team (PER DEP ANALYST)', 'vaga mais antiga',
+     'Headhunter, por passar de 45 dias em aberto', 'Carolina Karnakis + RH', '3 a 4 semanas'],
+]
+add_tab(['Frente critica', '% quadro aberto', 'Acao', 'Dono', 'Prazo de efeito'],
+        ACOES, fonte=7.5)
 
-_hhc = base_hc.get('HEALTHCARE INDUSTRY', 0)
-_h_n = vg['HEALTHCARE INDUSTRY']['n'] if 'HEALTHCARE INDUSTRY' in vg else 0
-_h_sub = vg['HEALTHCARE INDUSTRY']['sub'] if 'HEALTHCARE INDUSTRY' in vg else 0
-add_p('Healthcare merece atencao: tem {a} ativos e {n} vagas, porem todas de substituicao. '
-      'O quadro projetado continua em {a} pessoas e o volume de reposicao equivale a {t} do time, '
-      'ou seja, a area esta sendo inteiramente trocada e nao reforcada. O gargalo de capacidade '
-      'apontado na secao de areas sub-dimensionadas permanece.'.format(
-          a=_hhc, n=_h_n, t=pct(_h_sub, _hhc)),
-      style='List Bullet')
-
-_def_sem = [a for a in ['AEROSPACE INDUSTRY', 'COLD CHAIN', 'ENERGY INDUSTRY',
-                        'INDUSTRIES DEVELOPMENT', 'STRATEGY & FINANCE',
-                        'OPERATIONAL EXCELLENCE', 'REVENUE MANAGEMENT']
-            if a not in vg]
-add_p('Das areas identificadas como sub-dimensionadas, {n} seguem sem qualquer posicao em aberto: '
-      '{lista}. Somadas, reunem {hc} pessoas e nenhuma vaga, o que indica que o gargalo de '
-      'execucao dessas verticais nao esta enderecado no ciclo atual.'.format(
-          n=len(_def_sem), lista=', '.join(_def_sem),
-          hc=sum(base_hc.get(a, 0) for a in _def_sem)),
-      style='List Bullet')
-
-add_p('Os {cn} cargos novos concentram-se em competencias que a empresa ainda nao possui, como '
-      'seguranca da informacao, engenharia de dados, remuneracao e multimodal. Somam-se a duas '
-      'areas que nao existem na base de setembro, High-Tech e Special Operations, sinalizando '
-      'abertura de frentes novas em paralelo ao reforco da operacao existente.'.format(cn=N_CG_NOVO),
-      style='List Bullet')
-
-add_p('No agregado, o quadro projetado vai de {a} para {p} ativos, crescimento de {c}, com impacto '
-      'de {cv} ao mes. Como {ts} das {tv} posicoes sao substituicoes, o custo verdadeiramente '
-      'incremental e menor que o total das vagas e precisa ser lido junto da folha ja existente.'.format(
-          a=N_A, p=HC_PROJ, c=pct(TOT_AUM, N_A), cv=brl(TOT_CUSTO_V),
-          ts=TOT_SUB, tv=TOT_VAGAS),
-      style='List Bullet')
+# ---- 11.4 lacunas ----
+add_h('%d.4 Lacunas a confirmar na reuniao' % SEC, 2)
+add_p('Nova York nao aparece como escritorio no CIS. Confirmar com a Operacao se ha volume '
+      'proprio e quantas pessoas do bloco de Warehouses atendem a praca.', style='List Bullet')
+add_p('{s} das {t} vagas de Operacoes estao sem estagio de processo informado e a base traz '
+      'apenas o mes de inicio do ciclo, nao a data de abertura. Sem isso nao e possivel medir '
+      'dias em aberto por vaga, metrica necessaria para acionar headhunter acima de 45 dias.'.format(
+          s=_sem_st, t=TOT_VG_OP), style='List Bullet')
+add_p('O CIS mostra quem executou cada etapa, mas nao o headcount por area, e o Customer Care do '
+      'Brasil atende embarques de Miami. O volume por ativo deve ser lido como ordem de grandeza '
+      'por bloco, nao como produtividade individual.', style='List Bullet')
+add_p('Das areas sub-dimensionadas fora de Operacoes, sete seguem sem qualquer vaga: AEROSPACE '
+      'INDUSTRY, COLD CHAIN, ENERGY INDUSTRY, INDUSTRIES DEVELOPMENT, STRATEGY & FINANCE, '
+      'OPERATIONAL EXCELLENCE e REVENUE MANAGEMENT, somando 26 pessoas.', style='List Bullet')
 
 # ==================== 4. CORRECOES DE CONSISTENCIA ====================
 # 4a. Normaliza percentuais para o padrao brasileiro (virgula decimal).
@@ -598,11 +624,74 @@ FRASES = [
      'As duas bases usam nomenclaturas diferentes'),
     ('A planilha de vagas grava a area em caixa mista',
      'A planilha de vagas grava a área em caixa mista'),
+    # secao 11 enxuta
+    ('a classificacao e feita pelo cargo', 'a classificação é feita pelo cargo'),
+    ('nao e possivel medir', 'não é possível medir'),
+    ('o volume e atribuido ao bloco', 'o volume é atribuído ao bloco'),
+    ('E o unico bloco de Operacoes', 'É o único bloco de Operações'),
+    ('Sao os dois blocos', 'São os dois blocos'),
+    ('Tres metricas por bloco', 'Três métricas por bloco'),
+    ('e a unica posicao com ciclo', 'é a única posição com ciclo'),
+    ('ja existem na estrutura', 'já existem na estrutura'),
+    ('sao cargos novos', 'são cargos novos'),
+    ('Os blocos sao identificados', 'Os blocos são identificados'),
+    ('nao tem nenhuma vaga aberta', 'não tem nenhuma vaga aberta'),
+    ('nao aparece como escritorio no CIS', 'não aparece como escritório no CIS'),
+    ('precisa ser confirmada com a Operacao', 'precisa ser confirmada com a Operação'),
+    ('Confirmar com a Operacao se ha volume',
+     'Confirmar com a Operação se há volume'),
+    ('estao sem estagio de processo informado',
+     'estão sem estágio de processo informado'),
+    ('a base traz apenas o mes de inicio do ciclo',
+     'a base traz apenas o mês de início do ciclo'),
+    ('nao a data de abertura', 'não a data de abertura'),
+    ('mas nao o headcount por area', 'mas não o headcount por área'),
+    ('nao como produtividade individual', 'não como produtividade individual'),
+    ('verificando nao aliciamento', 'verificando não aliciamento'),
+    ('por passar de 45 dias em aberto', 'por passar de 45 dias em aberto'),
+    ('roda com metade da equipe prevista', 'roda com metade da equipe prevista'),
+    ('porem com equipe de', 'porém com equipe de'),
+    ('porem', 'porém'),
+    ('as tres vagas ja estao publicadas', 'as três vagas já estão publicadas'),
+    ('tres pracas', 'três praças'),
+    ('Onde esta o maior ponto', 'Onde está o maior ponto'),
+    ('Vaga parada ha mais tempo', 'Vaga parada há mais tempo'),
+    ('nao ha vaga anterior a outubro', 'não há vaga anterior a outubro'),
+    ('em marco e PER DEP ANALYST', 'em março é PER DEP ANALYST'),
+    ('Confirmar com a Operacao se ha volume proprio',
+     'Confirmar com a Operação se há volume próprio'),
+    ('Vaga pre-aprovada', 'Vaga pré-aprovada'),
+    ('pre-aprovada', 'pré-aprovada'),
 ]
 PALAVRAS = {
     'Posicoes': 'Posições', 'posicoes': 'posições',
     'Posicao': 'Posição', 'posicao': 'posição',
     'NAO': 'NÃO', 'Numeros': 'Números', 'numeros': 'números',
+    'Ocupacao': 'Ocupação', 'ocupacao': 'ocupação',
+    'Operacoes': 'Operações', 'operacoes': 'operações',
+    'Operacao': 'Operação', 'operacao': 'operação',
+    'Acao': 'Ação', 'acao': 'ação', 'Acoes': 'Ações', 'acoes': 'ações',
+    'reuniao': 'reunião', 'Reuniao': 'Reunião',
+    'atencao': 'atenção', 'Atencao': 'Atenção',
+    'metricas': 'métricas', 'metrica': 'métrica',
+    'estagio': 'estágio', 'Estagio': 'Estágio',
+    'aereo': 'aéreo', 'aereos': 'aéreos',
+    'maritimo': 'marítimo', 'maritimos': 'marítimos',
+    'mes': 'mês', 'Mes': 'Mês',
+    'inicio': 'início', 'Inicio': 'Início',
+    'Exportacao': 'Exportação', 'exportacao': 'exportação',
+    'pracas': 'praças', 'praca': 'praça',
+    'unico': 'único', 'Unico': 'Único',
+    'reforco': 'reforço', 'bonus': 'bônus',
+    'temporaria': 'temporária', 'temporarios': 'temporários',
+    'agencia': 'agência', 'necessaria': 'necessária',
+    'possivel': 'possível', 'proprio': 'próprio',
+    'marco': 'março', 'tres': 'três', 'Tres': 'Três',
+    'atribuido': 'atribuído', 'classificacao': 'classificação',
+    'Freight': 'Freight', 'critica': 'crítica', 'criticas': 'críticas',
+    'responsavel': 'responsável', 'periodo': 'período',
+    'media': 'média', 'Indicacao': 'Indicação', 'indicacao': 'indicação',
+    'Possidonio': 'Possidônio', 'Natalia': 'Natália',
     'Areas': 'Áreas', 'areas': 'áreas', 'Area': 'Área', 'area': 'área',
     'Correlacao': 'Correlação', 'correlacao': 'correlação',
     'projecao': 'projeção', 'Projecao': 'Projeção',
