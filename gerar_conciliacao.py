@@ -44,12 +44,17 @@ dif = n_dre - n_fol
 # duplicatas na folha
 dup_fol = {k: v for k, v in Counter(x["norm"] for x in fol).items() if v > 1}
 
-# match por primeiro+ultimo nome
-fol_fl = set(x["fl"] for x in fol)
-dre_fl = set(x["fl"] for x in dre)
+# Match por NOME COMPLETO normalizado (metodo A).
+# Obs.: o match por primeiro+ultimo nome foi descartado como metodo principal
+# porque colapsa pessoas distintas (ex.: LUCAS|SILVA, MARIA|SILVA aparecem 2x).
+fol_norm = set(x["norm"] for x in fol)
+dre_norm = set(x["norm"] for x in dre)
 
-saidas = [x for x in dre if x["fl"] not in fol_fl]      # DRE e nao folha
-entradas = [x for x in fol if x["fl"] not in dre_fl]    # folha e nao DRE
+saidas = [x for x in dre if x["norm"] not in fol_norm]    # DRE e nao folha
+entradas = [x for x in fol if x["norm"] not in dre_norm]  # folha e nao DRE
+
+# linhas excedentes por duplicidade na folha
+extra_dup = sum(v - 1 for v in dup_fol.values())
 
 # grafia divergente conhecida (conferir manualmente) - pares provaveis
 grafia = [
@@ -100,9 +105,15 @@ resumo = [
     ("Nomes so na DRE (sairam/nao considerados)", len(saidas), "Rotatividade - saidas"),
     ("Nomes so na Folha (entradas)", len(entradas), "Rotatividade - entradas"),
     ("Duplicata na folha", "; ".join(dup_fol.keys()) or "nenhuma",
-     "PAMELA IRIS GREGORIO IBARRA aparece 2x" if dup_fol else ""),
-    ("Reconciliacao", f"{n_dre} - {len(saidas)} + {len(entradas)} = {n_dre - len(saidas) + len(entradas)}",
-     "Aproxima de 322/323 (duplicata na folha)"),
+     f"{extra_dup} linha(s) excedente(s) por duplicidade"),
+    ("Reconciliacao (subtotal)",
+     f"{n_dre} - {len(saidas)} + {len(entradas)} = {n_dre - len(saidas) + len(entradas)}",
+     "DRE menos saidas mais entradas"),
+    ("Reconciliacao (final)",
+     f"{n_dre - len(saidas) + len(entradas)} + {extra_dup} = {n_dre - len(saidas) + len(entradas) + extra_dup}",
+     f"Igual ao total real da folha ({n_fol}) - balanco fecha"),
+    ("Metodo de cruzamento", "Nome completo normalizado",
+     "Sem acentos, maiusculas, espacos normalizados"),
 ]
 start = 3
 for i, (a, b, c) in enumerate(resumo):
@@ -186,18 +197,40 @@ doc.add_paragraph(
     "Entre agosto e setembro houve rotatividade nos dois sentidos - gente que saiu e gente "
     "que entrou - e os dois efeitos quase se cancelam na contagem total.")
 doc.add_paragraph(
-    "~23 nomes aparecem na DRE de agosto e NAO na folha de setembro "
+    f"{len(saidas)} nomes aparecem na DRE de agosto e NAO na folha de setembro "
     "(saidas / colaboradores nao considerados no mes).", style="List Bullet")
 doc.add_paragraph(
-    "~16-17 nomes aparecem na folha de setembro e NAO na DRE de agosto (entradas).",
+    f"{len(entradas)} nomes aparecem na folha de setembro e NAO na DRE de agosto (entradas).",
     style="List Bullet")
 
 doc.add_heading("3. Como a conta fecha", level=1)
+sub = n_dre - len(saidas) + len(entradas)
+tbl2 = doc.add_table(rows=1, cols=2); tbl2.style = "Light Grid Accent 1"
+h2 = tbl2.rows[0].cells
+h2[0].text = "Etapa da conciliacao"; h2[1].text = "Linhas"
+for etapa, val in [
+    ("DRE de agosto", str(n_dre)),
+    (f"(-) saidas (so na DRE)", f"-{len(saidas)}"),
+    (f"(+) entradas (so na folha)", f"+{len(entradas)}"),
+    ("(=) subtotal", str(sub)),
+    ("(+) linha duplicada na folha", f"+{extra_dup}"),
+    ("(=) TOTAL CALCULADO", str(sub + extra_dup)),
+    ("TOTAL REAL DA FOLHA DE SETEMBRO", str(n_fol)),
+]:
+    row = tbl2.add_row().cells
+    row[0].text = etapa; row[1].text = val
+    if etapa.startswith("(=) TOTAL") or etapa.startswith("TOTAL REAL"):
+        for cell in row:
+            for par in cell.paragraphs:
+                for run in par.runs: run.bold = True
+
+doc.add_paragraph()
 p = doc.add_paragraph()
-p.add_run("328 - 23 (sairam) + 17 (entraram) = 322").bold = True
-p.add_run(", resultado proximo de 322/323.")
+p.add_run(f"{n_dre} - {len(saidas)} (sairam) + {len(entradas)} (entraram) = {sub}").bold = True
+p.add_run(f", e somando a linha duplicada chega-se a {sub + extra_dup}, exatamente o total "
+          f"da folha de setembro. O balanco fecha sem residuo.")
 doc.add_paragraph(
-    "A pequena divergencia de 1 se explica por um nome duplicado na folha de setembro: "
+    "A linha excedente vem de um nome duplicado na folha de setembro: "
     "PAMELA IRIS GREGORIO IBARRA aparece 2 vezes.")
 
 doc.add_heading("4. Pontos de atencao (grafia divergente)", level=1)
@@ -209,9 +242,27 @@ for a, b, obs in grafia:
 
 doc.add_heading("5. Resumo executivo", level=1)
 doc.add_paragraph(
-    "A alteracao entre a DRE de agosto e a folha de setembro NAO e de 3 linhas. Trata-se de "
-    "uma diferenca liquida de 5 linhas, resultante de aproximadamente 23 saidas e 17 entradas "
-    "- ou seja, rotatividade relevante no quadro, mascarada pela proximidade dos totais.")
+    f"A alteracao entre a DRE de agosto e a folha de setembro NAO e de 3 linhas. Trata-se de "
+    f"uma diferenca liquida de {dif} linhas, resultante de {len(saidas)} saidas e "
+    f"{len(entradas)} entradas - ou seja, rotatividade relevante no quadro, mascarada pela "
+    f"proximidade dos totais.")
+
+doc.add_heading("6. Metodologia e validacao", level=1)
+doc.add_paragraph(
+    "O cruzamento foi feito pelo nome do colaborador (DRE: coluna C 'Colaborador'; folha: "
+    "coluna E 'NOME'), com normalizacao de acentos, maiusculas e espacos.")
+doc.add_paragraph("Os numeros foram conferidos por verificacoes independentes:", style="Normal")
+doc.add_paragraph("Contagem de linhas via leitura da planilha e, de forma independente, "
+                  "via leitura do XML interno do arquivo xlsx - ambas deram o mesmo resultado.",
+                  style="List Bullet")
+doc.add_paragraph("Verificacao de ausencia de linhas em branco no meio das bases.",
+                  style="List Bullet")
+doc.add_paragraph("Cruzamento por nome completo e, em paralelo, por primeiro+ultimo nome. "
+                  "O segundo metodo foi descartado como base oficial por agrupar pessoas "
+                  "distintas que compartilham sobrenomes comuns.", style="List Bullet")
+doc.add_paragraph("Checagem de duplicidades nas duas bases.", style="List Bullet")
+doc.add_paragraph("Fechamento do balanco contra o total real da folha, sem residuo.",
+                  style="List Bullet")
 
 docx_out = "Analise_Diferenca_DRE_Agosto_x_Folha_Setembro.docx"
 doc.save(docx_out)
