@@ -27,3 +27,6 @@ credentials.json
 .build_relatorio.html
 __pycache__/
 projeto-python/saude.db
+
+# Libs Python instaladas localmente (target de pip install)
+.pylibs/
