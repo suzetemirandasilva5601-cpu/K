@@ -47,13 +47,13 @@ Outubro de 2026
 #### Slide 2 — Panorama: onde a operação está mais descoberta
 
 - **Kicker:** `Operações – Ocupação x vagas`
-- **Título de ação sugerido:** "Operações opera com 19,6% do quadro em aberto, e a
+- **Título de ação sugerido:** "Operações opera com 17,9% do quadro em aberto, e a
   descoberta se concentra em Inland Freight Europa e Operações America"
 - **Conteúdo:** tabela dos 7 blocos com as colunas
-  `Bloco | Ativos | TL+ | Vagas | % quadro aberto | Embarques/mês | Embarques por ativo | Dono`
+  `Bloco | Ativos | TL+ | Vagas abertas | Já preench. | % quadro aberto | Embarques/mês | Embarques por ativo | Dono`
   usando o Anexo A1. Ordenar por `% quadro aberto` decrescente.
-- **Destaque visual:** barras de `% quadro aberto`, com Inland Freight Europa (55,6%)
-  e Operações America (50,0%) em cor de alerta; Warehouses em cor neutra com rótulo
+- **Destaque visual:** barras de `% quadro aberto`, com Inland Freight Europa (50,0%)
+  e Operações America (46,2%) em cor de alerta; Warehouses em cor neutra com rótulo
   "sem vaga aberta".
 - **Rodapé analítico:** "Volume por ativo é ordem de grandeza por bloco, não
   produtividade individual: o CIS mostra quem executou cada etapa, não o headcount,
@@ -67,9 +67,9 @@ Outubro de 2026
   pessoa"
 - **Conteúdo:** quatro blocos curtos, um por ponto de atenção, cada um com o número
   que o sustenta (Anexo A2):
-  1. **Quadro mais vazio:** Inland Freight Europa, 55,6% em aberto, 4 ativos e 5
+  1. **Quadro mais vazio:** Inland Freight Europa, 50,0% em aberto, 4 ativos e 4
      vagas, e **nenhum team leader** no bloco.
-  2. **Liderança descoberta:** Operações America, 50,0% em aberto, 7 ativos e 7
+  2. **Liderança descoberta:** Operações America, 46,2% em aberto, 7 ativos e 6
      vagas, das quais **3 são de team leader** (`AIR OPS TL AMERICAS`) com apenas
      1 TL hoje. Há ainda uma vaga de `OVERLAND HEAD` aberta e publicada.
   3. **Maior carga por pessoa:** Exportação Brasil, ~99 embarques por ativo ao mês
@@ -88,13 +88,11 @@ Outubro de 2026
 - **Título de ação sugerido:** "Cada frente crítica sai da agenda com ação, dono e
   prazo definidos"
 - **Conteúdo:** tabela `Frente crítica | % quadro aberto | Ação | Dono | Prazo de efeito`
-  com as 8 linhas do Anexo A4. Ordenar por criticidade (% em aberto e carga).
+  com as 7 linhas do Anexo A4. Ordenar por criticidade (% em aberto e carga).
 - **Faixa inferior "Pendências para fechar na reunião":**
-  - 12 das 19 vagas de Operações estão **sem estágio de processo informado**; a base
-    traz apenas o mês de início do ciclo, não a data de abertura. Sem isso não é
-    possível medir dias em aberto nem acionar a regra de headhunter acima de 45 dias.
-  - A vaga mais antiga de toda a empresa é `PER DEP ANALYST` (Talent Management Team),
-    ciclo iniciado em março, cerca de 7 meses em aberto.
+  - 12 das 17 vagas abertas de Operações estão **sem estágio de processo informado**; a base
+    traz apenas o mês de início do ciclo, não a data de abertura. Definir com o RH
+    quem atualiza o estágio de cada vaga e com que frequência.
   - Confirmar com a Operação o volume próprio de Nova York e quantas pessoas do bloco
     de Warehouses atendem a praça.
   - O número de ativos precisa vir do RH; o CIS não informa headcount por área.
@@ -112,9 +110,13 @@ Sem conteúdo analítico novo. Manter a arte do template.
 5. Máximo de 6 linhas de texto por bloco; o slide é de leitura rápida.
 6. Toda tabela ou gráfico deve ter a fonte no `Text Placeholder 4`.
 7. Separe sempre **aumento de quadro** de **vaga substituição**: só o primeiro
-   expande a estrutura. Nas Operações são 16 de aumento e 3 de substituição.
-8. Ao citar área, use a nomenclatura da base de setembro (caixa alta).
-9. Não trate volume por ativo como produtividade individual.
+   expande a estrutura. Nas Operações são 15 de aumento e 2 de substituição.
+8. **Nunca trate as 65 linhas da planilha como vagas em aberto.** Uma linha só é
+   vaga em aberto quando não tem ocupante nomeado. 13 já estão preenchidas e 3
+   precisam de confirmação; o número correto de posições em aberto é 49 no total
+   e 17 nos blocos de Operações.
+9. Ao citar área, use a nomenclatura da base de setembro (caixa alta).
+10. Não trate volume por ativo como produtividade individual.
 
 ### Glossário de equivalência entre as bases (necessário para o cruzamento)
 
@@ -133,19 +135,37 @@ Sem conteúdo analítico novo. Manter a arte do template.
 
 ### A1. Ocupação, vagas e volume por bloco
 
-| Bloco | Ativos | TL+ | Vagas | % quadro aberto | Aumento | Subst. | Embarques/mês | Embarques por ativo | Custo vagas | Dono |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Europa / Inland Freight Europa | 4 | 0 | 5 | 55,6% | 2 | 3 | 530 (bloco Europa) | 29 | R$ 64.277 | Carol Mendoza |
-| EUA / Operações America | 7 | 1 | 7 | 50,0% | 7 | 0 | 1.110 (bloco EUA) | 56 | R$ 124.055 | Carol Mendoza, Filipe Sampaio |
-| EUA / Inland Freight America | 8 | 1 | 3 | 27,3% | 3 | 0 | 1.110 (bloco EUA) | 56 | R$ 43.611 | Carol Mendoza, Filipe Sampaio |
-| Brasil / Exportação | 3 | 1 | 1 | 25,0% | 1 | 0 | 298 | 99 | R$ 13.371 | Carol Mendoza |
-| Europa / Operações Europa | 14 | 2 | 2 | 12,5% | 2 | 0 | 530 (bloco Europa) | 29 | R$ 20.666 | Carol Mendoza, Filipe Sampaio |
-| Brasil / Customer Care | 37 | 7 | 1 | 2,6% | 1 | 0 | 2.287 | 62 | R$ 12.005 | Carol Mendoza, Natália Costa |
-| EUA / Warehouses (MIA, Houston, NY) | 5 | 1 | 0 | 0,0% | 0 | 0 | 1.110 (bloco EUA) | 56 | R$ 0 | Possidônio Dantas |
-| **TOTAL Operações** | **78** | **13** | **19** | **19,6%** | **16** | **3** | | | **R$ 277.985** | |
+Atenção: a planilha de vagas tem 65 registros, mas **nem todos são vagas em aberto**.
+13 já estão preenchidas (ocupante nomeado e data de admissão) e 3 têm admissão já
+ocorrida sem ocupante identificado. Restam **49 posições efetivamente em aberto**,
+das quais **17 nos blocos de Operações**.
+
+| Bloco | Ativos | TL+ | Vagas abertas | Já preench. | % quadro aberto | Aumento | Subst. | Embarques aéreos/mês | Embarques por ativo | Custo vagas abertas | Dono |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Europa / Inland Freight Europa | 4 | 0 | 4 | 1 | 50,0% | 2 | 2 | 530 (bloco Europa) | 29 | R$ 53.944 | Carol Mendoza |
+| EUA / Operações America | 7 | 1 | 6 | 1 | 46,2% | 6 | 0 | 971 (bloco EUA) | 56 | R$ 107.416 | Carol Mendoza, Filipe Sampaio |
+| EUA / Inland Freight America | 8 | 1 | 3 | 0 | 27,3% | 3 | 0 | 971 (bloco EUA) | 56 | R$ 43.611 | Carol Mendoza, Filipe Sampaio |
+| Brasil / Exportação | 3 | 1 | 1 | 0 | 25,0% | 1 | 0 | 244 | 100 | R$ 13.371 | Carol Mendoza |
+| Europa / Operações Europa | 14 | 2 | 2 | 0 | 12,5% | 2 | 0 | 530 (bloco Europa) | 29 | R$ 20.666 | Carol Mendoza, Filipe Sampaio |
+| Brasil / Customer Care | 37 | 7 | 1 | 0 | 2,6% | 1 | 0 | 2.287 | 62 | R$ 12.005 | Carol Mendoza, Natália Costa |
+| EUA / Warehouses (MIA, Houston, NY) | 5 | 1 | 0 | 0 | 0,0% | 0 | 0 | 971 (bloco EUA) | 56 | R$ 0 | Possidônio Dantas |
+| **TOTAL Operações** | **78** | **13** | **17** | **2** | **17,9%** | **15** | **2** | | | **R$ 251.013** | |
 
 `TL+` = team leaders, senior team leaders, coordinators e heads do bloco.
-`% quadro aberto` = vagas ÷ (ativos + vagas).
+`% quadro aberto` = vagas abertas ÷ (ativos + vagas abertas).
+
+As 2 vagas de Operações já preenchidas são `AIR OPS ANALYST AMERICAS` (admissão
+20/10) e `AIR OPS ANALYST INLAND EUROPA` (admissão 13/10). Elas **não** devem
+aparecer como posições a contratar.
+
+### A1b. Estado dos 65 registros da planilha de vagas
+
+| Estado | Registros | Nos blocos de Operações |
+|---|---|---|
+| Em aberto (sem ocupante) | 49 | 17 |
+| Já preenchida (ocupante nomeado e admissão) | 13 | 2 |
+| A confirmar (admissão ocorrida, sem ocupante) | 3 | 0 |
+| **TOTAL** | **65** | **19** |
 
 ### A2. Volume do CIS por origem (média abr–set/26, conferido)
 
@@ -187,14 +207,13 @@ Vagas de liderança nas Operações: 3 de `AIR OPS TL AMERICAS` (aumento de quad
 
 | Frente crítica | % quadro aberto | Ação | Dono | Prazo de efeito |
 |---|---|---|---|---|
-| Europa / Inland Freight Europa | 55,6% | Reaproveitar finalistas de processos recentes e indicação interna com bônus | Carol Mendoza + RH | 1 a 3 semanas |
-| EUA / Operações America | 50,0% | Vaga pré-aprovada com faixa e budget definidos, processo enxuto e cobertura temporária pelo Brasil no back-office | Carol Mendoza, Filipe Sampaio + RH | Imediato |
+| Europa / Inland Freight Europa | 50,0% | Reaproveitar finalistas de processos recentes e indicação interna com bônus | Carol Mendoza + RH | 1 a 3 semanas |
+| EUA / Operações America | 46,2% | Vaga pré-aprovada com faixa e budget definidos, processo enxuto e cobertura temporária pelo Brasil no back-office | Carol Mendoza, Filipe Sampaio + RH | Imediato |
 | EUA / Inland Freight America | 27,3% | Indicação interna com bônus; as três vagas já estão publicadas | Carol Mendoza, Filipe Sampaio + RH | 2 a 3 semanas |
 | Brasil / Exportação | 25,0% | Processo enxuto e busca de profissionais de contratos encerrados, verificando não aliciamento | Carol Mendoza + RH | Imediato a 4 semanas |
 | Europa / Operações Europa | 12,5% | Processo enxuto: triagem em 48 h, entrevistas no mesmo dia e proposta em 24 h | Carol Mendoza, Filipe Sampaio + RH | Imediato |
 | Brasil / Customer Care | 2,6% | Processo enxuto e acompanhamento do volume por ativo | Carol Mendoza, Natália Costa + RH | Imediato |
 | EUA / Warehouses (MIA, Houston, NY) | 0,0% | Validar necessidade de abrir vaga e contratar temporários ou agência para as três praças | Possidônio Dantas + RH | 1 a 2 semanas |
-| Talent Management Team (`PER DEP ANALYST`) | vaga mais antiga | Headhunter, por passar de 45 dias em aberto | Carolina Karnakis + RH | 3 a 4 semanas |
 
 ### A5. Playbook de ações (referência)
 
@@ -207,4 +226,4 @@ Vagas de liderança nas Operações: 3 de `AIR OPS TL AMERICAS` (aumento de quad
 | Indicação interna com bônus | Todas, principalmente EUA e Europa | 2 a 3 semanas |
 | Temporários ou agência | Warehouses de MIA, Houston e NY | 1 a 2 semanas |
 | Profissionais vindos de contratos encerrados | Operações e Customer Care; verificar não aliciamento | 2 a 4 semanas |
-| Headhunter | Liderança e vagas com mais de 45 dias | 3 a 4 semanas |
+| Headhunter | Posições de liderança | 3 a 4 semanas |

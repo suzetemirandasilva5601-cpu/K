@@ -19,13 +19,23 @@ Correlacao em dois niveis:
             correlacao por cargo mostra quantas pessoas ja ocupam cada cargo
             e marca os cargos que ainda nao existem na estrutura.
 """
+import datetime
 import re
 from collections import Counter, defaultdict
+
+import unicodedata
 
 import openpyxl
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.text.paragraph import Paragraph
+
+
+def norm_txt(s):
+    """Texto sem acentos e em caixa alta, para comparacoes robustas."""
+    s = unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode()
+    return ' '.join(s.upper().split())
 
 DOCX = 'DMS_Base_Setembro26_Visao_Organizacional.docx'
 BASE = 'Base_Setembro26 (1).xlsx'
@@ -73,8 +83,35 @@ base_cargo_hc = Counter(str(r[B_CARGO]).strip().upper() for r in ATIVOS if r[B_C
 base_cargos = set(base_cargo_hc)
 
 wv = openpyxl.load_workbook(VAGAS, data_only=True)['Vagas']
-VG = [r for r in wv.iter_rows(min_row=2, values_only=True)
-      if r[V_CARGO] and str(r[V_CARGO]).strip() not in ('', 'None')]
+VG_TODAS = [r for r in wv.iter_rows(min_row=2, values_only=True)
+            if r[V_CARGO] and str(r[V_CARGO]).strip() not in ('', 'None')]
+
+# ---------------------------------------------------------------------------
+# Estado de cada linha da planilha de vagas.
+# Parte das 65 linhas NAO sao vagas em aberto: 13 estao com status FECHADA,
+# ocupante nomeado e data de admissao, portanto ja foram preenchidas. Outras 3
+# tem admissao ja ocorrida sem ocupante identificado e precisam de confirmacao.
+# Contar as 65 como abertas superestima a necessidade de contratacao.
+# ---------------------------------------------------------------------------
+DATA_BASE_VAGAS = datetime.date(2026, 10, 21)   # a planilha e de 21/10
+
+
+def preenchido(v):
+    return v is not None and str(v).strip() not in ('', 'None', '.', '-', 'TBD', 'TDB', '?')
+
+
+def estado_vaga(r):
+    if preenchido(r[V_CONTRATADO]):
+        return 'preenchida'
+    adm = r[4]
+    if isinstance(adm, datetime.datetime) and adm.date() <= DATA_BASE_VAGAS:
+        return 'a confirmar'
+    return 'aberta'
+
+
+VG = [r for r in VG_TODAS if estado_vaga(r) == 'aberta']
+VG_PREENCH = [r for r in VG_TODAS if estado_vaga(r) == 'preenchida']
+VG_CONFIRMAR = [r for r in VG_TODAS if estado_vaga(r) == 'a confirmar']
 
 # dicionario de equivalencia de nomenclatura entre as duas planilhas
 MAP = {
@@ -200,6 +237,32 @@ for tb in doc.tables:
 
 print('Travessoes: %d antes -> %d depois' % (antes, conta_dashes(doc)))
 
+# ==================== 1b. REMOCAO DE SECAO DE VAGAS JA EXISTENTE ====================
+# Torna o script idempotente: se o documento de entrada ja tiver a secao de
+# vagas (de uma execucao anterior), ela e removida antes de ser reconstruida,
+# evitando duplicar a secao.
+MARCA = 'VAGAS EM ABERTO'
+_corpo = doc.element.body
+_filhos = list(_corpo.iterchildren())
+_ini = None
+for i, ch in enumerate(_filhos):
+    if ch.tag.split('}')[1] != 'p':
+        continue
+    p = Paragraph(ch, doc)
+    if p.style.name == 'Heading 1' and MARCA in norm_txt(p.text):
+        _ini = i
+        break
+if _ini is not None:
+    _rm = 0
+    for ch in _filhos[_ini:]:
+        # preserva o sectPr final: o python-docx depende dele para calcular a
+        # largura das tabelas que serao adicionadas depois
+        if ch.tag.split('}')[1] not in ('p', 'tbl'):
+            continue
+        _corpo.remove(ch)
+        _rm += 1
+    print('\nSecao de vagas anterior removida: %d elementos' % _rm)
+
 # ==================== 2. RENUMERACAO ====================
 h1s = [p for p in doc.paragraphs if p.style.name == 'Heading 1']
 print('\nRenumerando %d secoes:' % len(h1s))
@@ -273,7 +336,7 @@ def add_tab(cols, linhas, fonte=8.5):
 SEC = len(h1s) + 1
 
 # ---------------------------------------------------------------------------
-# Blocos operacionais pedidos pela area: EUA, Europa e Brasil.
+# Blocos operacionais: EUA, Europa e Brasil.
 # A classificacao e feita pelo CARGO, nao pela AREA, porque termos como
 # INLAND, AMERICAS, EUROPA, WH, CC e EXPORT so existem em "CARGO DRE 2026.2".
 # ---------------------------------------------------------------------------
@@ -307,48 +370,67 @@ def bloco(cargo):
     return None
 
 
+LIDER = {'TEAM LEADER', 'SR. TEAM LEADER', 'COORDINATOR', 'HEAD'}
 b_at = Counter()
+b_tl = Counter()
 b_head = defaultdict(Counter)
-b_vg = Counter()
-b_aum = Counter()
-b_sub = Counter()
-b_cst = defaultdict(float)
-b_mes = defaultdict(Counter)
-b_st = defaultdict(Counter)
 for r in ATIVOS:
     b = bloco(r[B_CARGO])
     if b:
         b_at[b] += 1
         b_head[b][r[B_HEAD]] += 1
+        if r[B_POS] in LIDER:
+            b_tl[b] += 1
+
+b_ab = Counter()      # vagas realmente em aberto
+b_pr = Counter()      # vagas ja preenchidas
+b_aum = Counter()
+b_sub = Counter()
+b_cst = defaultdict(float)
+b_pub = Counter()
+b_semst = Counter()
+b_lid = Counter()     # vagas de lideranca em aberto
 for r in VG:
     b = bloco(r[V_CARGO])
+    if not b:
+        continue
+    b_ab[b] += 1
+    b_cst[b] += num(r[V_CUSTO])
+    if eh_aumento(r):
+        b_aum[b] += 1
+    else:
+        b_sub[b] += 1
+    if 'ABERTA' in str(r[V_STATUS]).upper():
+        b_pub[b] += 1
+    else:
+        b_semst[b] += 1
+    cg = str(r[V_CARGO]).upper()
+    if ' TL' in cg or 'HEAD' in cg:
+        b_lid[b] += 1
+for r in VG_PREENCH:
+    b = bloco(r[V_CARGO])
     if b:
-        b_vg[b] += 1
-        b_cst[b] += num(r[V_CUSTO])
-        b_mes[b][str(r[13]).strip()] += 1
-        s = str(r[V_STATUS]).upper()
-        b_st[b]['publicada' if 'ABERTA' in s else
-                ('fechada' if 'FECHADA' in s else 'sem status')] += 1
-        if eh_aumento(r):
-            b_aum[b] += 1
-        else:
-            b_sub[b] += 1
+        b_pr[b] += 1
 
-# Volume de referencia do CIS (embarques/mes, media abr a set/26), informado
-# pela area. O CIS nao informa headcount por area, portanto o volume e
-# atribuido ao bloco geografico e nao a pessoa.
-CIS_AEREO = {'EUA': 970, 'Europa': 530,
-             'Brasil / Customer Care': 2287, 'Brasil / Exportacao': 244}
-CIS_MARIT = {'EUA': 139, 'Brasil / Exportacao': 55}
-EUA_BLOCOS = [b for b in BLOCOS if b.startswith('EUA')]
-EUR_BLOCOS = [b for b in BLOCOS if b.startswith('Europa')]
-at_eua = sum(b_at[b] for b in EUA_BLOCOS)
-at_eur = sum(b_at[b] for b in EUR_BLOCOS)
+# Volume do CIS (embarque = assembly_id distinto, datado por created_at),
+# media de abril a setembro de 2026. Conferido em cinco passadas.
+CIS = {'EUA_aereo': 971, 'EUA_maritimo': 139, 'Europa_aereo': 530,
+       'CC_aereo': 2287, 'EXP_aereo': 244, 'EXP_maritimo': 55,
+       'HOU_media': 94, 'HOU_julset': 169, 'HOU_abrjun': 19}
+EUA_B = [b for b in BLOCOS if b.startswith('EUA')]
+EUR_B = [b for b in BLOCOS if b.startswith('Europa')]
+at_eua = sum(b_at[b] for b in EUA_B)
+at_eur = sum(b_at[b] for b in EUR_B)
 at_cc = b_at['Brasil / Customer Care']
 at_ex = b_at['Brasil / Exportacao']
+vol_eua = CIS['EUA_aereo'] + CIS['EUA_maritimo']
+vol_ex = CIS['EXP_aereo'] + CIS['EXP_maritimo']
 
 TOT_AT_OP = sum(b_at[b] for b in BLOCOS)
-TOT_VG_OP = sum(b_vg[b] for b in BLOCOS)
+TOT_AB_OP = sum(b_ab[b] for b in BLOCOS)
+TOT_PR_OP = sum(b_pr[b] for b in BLOCOS)
+TOT_CST_OP = sum(b_cst[b] for b in BLOCOS)
+TOT_SEMST_OP = sum(b_semst[b] for b in BLOCOS)
 
 
 def dono(b):
@@ -356,129 +438,154 @@ def dono(b):
 
 
 def ocup(b):
-    """% do quadro em aberto = vagas / (ativos + vagas)."""
-    d = b_at[b] + b_vg[b]
-    return pct(b_vg[b], d) if d else 'n/a'
+    """% do quadro em aberto = vagas em aberto / (ativos + vagas em aberto)."""
+    d = b_at[b] + b_ab[b]
+    return pct(b_ab[b], d) if d else 'n/a'
+
+
+def ocup_num(b):
+    d = b_at[b] + b_ab[b]
+    return b_ab[b] / d if d else 0
+
+
+def volbloco(b):
+    if b.startswith('EUA'):
+        return '%d (bloco EUA)' % CIS['EUA_aereo'], '%.0f' % (vol_eua / at_eua) if at_eua else 'n/a'
+    if b.startswith('Europa'):
+        return '%d (bloco Europa)' % CIS['Europa_aereo'], '%.0f' % (CIS['Europa_aereo'] / at_eur) if at_eur else 'n/a'
+    if b == 'Brasil / Customer Care':
+        return '%d' % CIS['CC_aereo'], '%.0f' % (CIS['CC_aereo'] / at_cc) if at_cc else 'n/a'
+    return '%d' % CIS['EXP_aereo'], '%.0f' % (vol_ex / at_ex) if at_ex else 'n/a'
 
 
 add_h('%d. Vagas em Aberto x Ocupacao nas Operacoes' % SEC, 1)
-add_p('Cruzamento entre a estrutura de Operacoes e as {tv} posicoes em aberto (base de vagas de '
-      '21/10), bloco por bloco. Os blocos sao identificados pelo cargo e nao pela area, porque '
-      'termos como INLAND, AMERICAS, EUROPA, WH, CC e EXPORT existem apenas na coluna '
-      '"CARGO DRE 2026.2" da base de setembro. Dos {tv} cargos em aberto, {ce} ja existem na '
-      'estrutura e {cn} sao cargos novos; ao cruzar as planilhas, CCO deve ser lido como CMO e '
-      '"Healthcare" como "HEALTHCARE INDUSTRY".'.format(tv=TOT_VAGAS, ce=N_CG_EXIST, cn=N_CG_NOVO))
+add_p('A planilha de vagas de 21/10 tem {tot} registros, mas eles nao sao todos vagas em aberto: '
+      '{pr} ja estao preenchidas, com ocupante nomeado e data de admissao, e {cf} tem admissao '
+      'ja ocorrida sem ocupante identificado. Restam {ab} posicoes efetivamente em aberto, das '
+      'quais {abo} nos blocos de Operacoes. Os blocos sao identificados pelo cargo e nao pela '
+      'area, porque termos como INLAND, AMERICAS, EUROPA, WH, CC e EXPORT existem apenas na '
+      'coluna "CARGO DRE 2026.2".'.format(
+          tot=len(VG_TODAS), pr=len(VG_PREENCH), cf=len(VG_CONFIRMAR),
+          ab=len(VG), abo=TOT_AB_OP))
+
+add_tab(['Estado da linha na planilha de vagas', 'Registros', 'Nos blocos de Operacoes'], [
+    ['Em aberto (sem ocupante)', len(VG), TOT_AB_OP],
+    ['Ja preenchida (ocupante nomeado e admissao)', len(VG_PREENCH), TOT_PR_OP],
+    ['A confirmar (admissao ocorrida, sem ocupante)', len(VG_CONFIRMAR),
+     sum(1 for r in VG_CONFIRMAR if bloco(r[V_CARGO]))],
+    ['TOTAL de registros', len(VG_TODAS),
+     TOT_AB_OP + TOT_PR_OP + sum(1 for r in VG_CONFIRMAR if bloco(r[V_CARGO]))],
+], fonte=9)
+add_nota('As {cf} linhas a confirmar sao estagios (AIR OPS INTERN e OCEAN FD INTERN) com admissao '
+         'em 01/10 e nenhum ocupante registrado, todas fora dos blocos de Operacoes. '
+         'Nas Operacoes, as {pr} vagas ja preenchidas sao AIR OPS ANALYST AMERICAS, com admissao '
+         'em 20/10, e AIR OPS ANALYST INLAND EUROPA, com admissao em 13/10.'.format(
+             cf=len(VG_CONFIRMAR), pr=TOT_PR_OP))
 
 # ---- 11.1 panorama ----
 add_h('%d.1 Ocupacao, vagas e volume por bloco' % SEC, 2)
 add_p('Tres metricas por bloco: percentual do quadro em aberto, volume de embarques por ativo e '
-      'estagio do processo. O volume vem do CIS, media de abril a setembro de 2026.')
+      'estagio do processo. Volume do CIS, media de abril a setembro de 2026. A coluna de '
+      'ocupacao considera apenas as vagas efetivamente em aberto.')
 
 linhas = []
-for b in BLOCOS:
-    if b.startswith('EUA'):
-        vol = '%d (bloco EUA)' % CIS_AEREO['EUA']
-        vpa = '%.0f' % ((CIS_AEREO['EUA'] + CIS_MARIT['EUA']) / at_eua) if at_eua else 'n/a'
-    elif b.startswith('Europa'):
-        vol = '%d (bloco Europa)' % CIS_AEREO['Europa']
-        vpa = '%.0f' % (CIS_AEREO['Europa'] / at_eur) if at_eur else 'n/a'
-    elif b == 'Brasil / Customer Care':
-        vol = '%d' % CIS_AEREO[b]
-        vpa = '%.0f' % (CIS_AEREO[b] / at_cc) if at_cc else 'n/a'
-    else:
-        vol = '%d' % CIS_AEREO[b]
-        vpa = '%.0f' % ((CIS_AEREO[b] + CIS_MARIT[b]) / at_ex) if at_ex else 'n/a'
-    linhas.append([b, b_at[b], b_vg[b], ocup(b), b_aum[b], b_sub[b],
-                   vol, vpa, brl(b_cst[b]), dono(b)])
-linhas.append(['TOTAL blocos de Operacoes', TOT_AT_OP, TOT_VG_OP,
-               pct(TOT_VG_OP, TOT_AT_OP + TOT_VG_OP),
+for b in sorted(BLOCOS, key=lambda x: -ocup_num(x)):
+    vol, vpa = volbloco(b)
+    linhas.append([b, b_at[b], b_tl[b], b_ab[b], b_pr[b], ocup(b),
+                   b_aum[b], b_sub[b], vol, vpa, brl(b_cst[b]), dono(b)])
+linhas.append(['TOTAL blocos de Operacoes', TOT_AT_OP, sum(b_tl[b] for b in BLOCOS),
+               TOT_AB_OP, TOT_PR_OP, pct(TOT_AB_OP, TOT_AT_OP + TOT_AB_OP),
                sum(b_aum[b] for b in BLOCOS), sum(b_sub[b] for b in BLOCOS),
-               '', '', brl(sum(b_cst[b] for b in BLOCOS)), ''])
-add_tab(['Bloco', 'Ativos', 'Vagas', '% quadro aberto', 'Aumento', 'Subst.',
-         'Embarques aereos/mes (CIS)', 'Embarques por ativo', 'Custo vagas', 'Dono'],
-        linhas, fonte=7)
+               '', '', brl(TOT_CST_OP), ''])
+add_tab(['Bloco', 'Ativos', 'TL+', 'Vagas abertas', 'Ja preench.', '% quadro aberto',
+         'Aumento', 'Subst.', 'Embarques aereos/mes', 'Embarques por ativo',
+         'Custo vagas abertas', 'Dono'], linhas, fonte=6.5)
 
-add_nota('O volume por ativo do bloco EUA inclui os {m} embarques maritimos de Miami e o de '
-         'Exportacao inclui os {e} maritimos. Nova York nao aparece como escritorio no CIS e '
-         'precisa ser confirmada com a Operacao. Houston cresce: media de {h} por mes no periodo, '
-         'porem {hc} por mes entre julho e setembro, alta de {ha}.'.format(
-             m=CIS_MARIT['EUA'], e=CIS_MARIT['Brasil / Exportacao'], h=94, hc=169,
-             ha=pct(169 - 94, 94)))
+add_nota('TL+ reune team leaders, senior team leaders, coordinators e heads do bloco. '
+         'O volume por ativo do bloco EUA inclui os {m} embarques maritimos de Miami e o de '
+         'Exportacao inclui os {e} maritimos. Nova York nao aparece como escritorio no CIS. '
+         'Houston cresce: media de {h} por mes no periodo, porem {hj} por mes entre julho e '
+         'setembro, o que implica cerca de {ha} por mes entre abril e junho.'.format(
+             m=CIS['EUA_maritimo'], e=CIS['EXP_maritimo'], h=CIS['HOU_media'],
+             hj=CIS['HOU_julset'], ha=CIS['HOU_abrjun']))
 
 # ---- 11.2 pontos de atencao ----
-add_h('%d.2 Onde esta o maior ponto de atencao' % SEC, 2)
-_top = sorted(BLOCOS, key=lambda b: -(b_vg[b] / (b_at[b] + b_vg[b]) if b_at[b] + b_vg[b] else 0))
+add_h('%d.2 Pontos de atencao' % SEC, 2)
+_top = sorted(BLOCOS, key=lambda b: -ocup_num(b))
 _b1, _b2 = _top[0], _top[1]
-add_p('Quadro mais vazio: {b1} com {o1} do quadro em aberto ({a1} ativos e {v1} vagas) e {b2} com '
-      '{o2} ({a2} ativos e {v2} vagas). Sao os dois blocos onde a operacao roda com metade da '
-      'equipe prevista.'.format(
-          b1=_b1, o1=ocup(_b1), a1=b_at[_b1], v1=b_vg[_b1],
-          b2=_b2, o2=ocup(_b2), a2=b_at[_b2], v2=b_vg[_b2]),
+add_p('Quadro mais vazio: {b1} com {o1} do quadro em aberto ({a1} ativos e {v1} vagas) e sem '
+      'nenhum team leader no bloco. Em seguida {b2}, com {o2} ({a2} ativos e {v2} vagas) e '
+      'apenas {t2} posicao de lideranca hoje, sendo que {l2} das vagas abertas sao de team '
+      'leader.'.format(
+          b1=_b1, o1=ocup(_b1), a1=b_at[_b1], v1=b_ab[_b1],
+          b2=_b2, o2=ocup(_b2), a2=b_at[_b2], v2=b_ab[_b2],
+          t2=b_tl[_b2], l2=b_lid[_b2]),
       style='List Bullet')
 add_p('Maior volume por pessoa: Exportacao Brasil absorve cerca de {v} embarques por ativo ao mes '
       'com apenas {a} pessoas e {o} do quadro em aberto. Customer Care vem em seguida, com cerca '
       'de {vc} por ativo, porem com equipe de {ac} pessoas e somente {oc} em aberto.'.format(
-          v='%.0f' % ((CIS_AEREO['Brasil / Exportacao'] + CIS_MARIT['Brasil / Exportacao']) / at_ex),
-          a=at_ex, o=ocup('Brasil / Exportacao'),
-          vc='%.0f' % (CIS_AEREO['Brasil / Customer Care'] / at_cc), ac=at_cc,
+          v='%.0f' % (vol_ex / at_ex), a=at_ex, o=ocup('Brasil / Exportacao'),
+          vc='%.0f' % (CIS['CC_aereo'] / at_cc), ac=at_cc,
           oc=ocup('Brasil / Customer Care')),
       style='List Bullet')
-add_p('Risco silencioso nos Warehouses: {a} pessoas cobrem tres pracas (MIA, Houston e NY) e o '
-      'bloco nao tem nenhuma vaga aberta, mesmo com Houston crescendo {ha}. E o unico bloco de '
-      'Operacoes sem reforco previsto.'.format(
-          a=b_at['EUA / Warehouses (MIA, Houston, NY)'], ha=pct(169 - 94, 94)),
+add_p('Risco nos Warehouses: {a} pessoas cobrem tres pracas (MIA, Houston e NY) e o bloco nao tem '
+      'nenhuma vaga aberta, mesmo com Houston saindo de cerca de {ha} para {hj} embarques por mes '
+      'no terceiro trimestre. E o unico bloco de Operacoes sem reforco previsto.'.format(
+          a=b_at['EUA / Warehouses (MIA, Houston, NY)'],
+          ha=CIS['HOU_abrjun'], hj=CIS['HOU_julset']),
       style='List Bullet')
-_sem_st = sum(b_st[b]['sem status'] for b in BLOCOS)
-add_p('Vaga parada ha mais tempo: a unica posicao com ciclo iniciado em marco e PER DEP ANALYST, '
-      'em Talent Management Team, cerca de 7 meses em aberto. Nos blocos de Operacoes nao ha vaga '
-      'anterior a outubro, porem {s} das {t} vagas estao sem estagio de processo informado, o que '
-      'impede medir o tempo real de cada uma.'.format(s=_sem_st, t=TOT_VG_OP),
+add_p('Estagio do processo: {s} das {t} vagas abertas de Operacoes nao tem estagio informado e '
+      'apenas {p} estao publicadas. A planilha traz somente o mes de inicio do ciclo, nao a data '
+      'de abertura, o que impede medir o tempo real de cada vaga.'.format(
+          s=TOT_SEMST_OP, t=TOT_AB_OP, p=sum(b_pub[b] for b in BLOCOS)),
       style='List Bullet')
 
 # ---- 11.3 plano de acao ----
 add_h('%d.3 Plano de acao para a reuniao de 30 minutos' % SEC, 2)
 add_p('Uma linha por frente critica, com acao, responsavel e prazo de efeito.')
 ACOES = [
-    ['Europa / Inland Freight Europa', ocup('Europa / Inland Freight Europa'),
+    ['Europa / Inland Freight Europa',
      'Reaproveitar finalistas de processos recentes e indicacao interna com bonus',
-     dono('Europa / Inland Freight Europa') + ' + RH', '1 a 3 semanas'],
-    ['EUA / Operacoes America', ocup('EUA / Operacoes America'),
+     'Carol Mendoza + RH', '1 a 3 semanas'],
+    ['EUA / Operacoes America',
      'Vaga pre-aprovada com faixa e budget definidos, processo enxuto e cobertura '
      'temporaria pelo Brasil no back-office',
-     dono('EUA / Operacoes America') + ' + RH', 'Imediato'],
-    ['Brasil / Exportacao', ocup('Brasil / Exportacao'),
+     'Carol Mendoza, Filipe Sampaio + RH', 'Imediato'],
+    ['EUA / Inland Freight America',
+     'Indicacao interna com bonus; as tres vagas ja estao publicadas',
+     'Carol Mendoza, Filipe Sampaio + RH', '2 a 3 semanas'],
+    ['Brasil / Exportacao',
      'Processo enxuto e busca de profissionais de contratos encerrados, verificando '
      'nao aliciamento',
-     dono('Brasil / Exportacao') + ' + RH', 'Imediato a 4 semanas'],
-    ['EUA / Inland Freight America', ocup('EUA / Inland Freight America'),
-     'Indicacao interna com bonus; as tres vagas ja estao publicadas',
-     dono('EUA / Inland Freight America') + ' + RH', '2 a 3 semanas'],
-    ['EUA / Warehouses (MIA, Houston, NY)', ocup('EUA / Warehouses (MIA, Houston, NY)'),
-     'Validar necessidade de abrir vaga e contratar temporarios ou agencia para as tres pracas',
-     dono('EUA / Warehouses (MIA, Houston, NY)') + ' + RH', '1 a 2 semanas'],
-    ['Europa / Operacoes Europa', ocup('Europa / Operacoes Europa'),
+     'Carol Mendoza + RH', 'Imediato a 4 semanas'],
+    ['Europa / Operacoes Europa',
      'Processo enxuto com triagem em 48 horas e proposta em 24 horas',
-     dono('Europa / Operacoes Europa') + ' + RH', 'Imediato'],
-    ['Brasil / Customer Care', ocup('Brasil / Customer Care'),
+     'Carol Mendoza, Filipe Sampaio + RH', 'Imediato'],
+    ['Brasil / Customer Care',
      'Processo enxuto e acompanhamento do volume por ativo',
-     dono('Brasil / Customer Care') + ' + RH', 'Imediato'],
-    ['Talent Management Team (PER DEP ANALYST)', 'vaga mais antiga',
-     'Headhunter, por passar de 45 dias em aberto', 'Carolina Karnakis + RH', '3 a 4 semanas'],
+     'Carol Mendoza, Natalia Costa + RH', 'Imediato'],
+    ['EUA / Warehouses (MIA, Houston, NY)',
+     'Validar necessidade de abrir vaga e contratar temporarios ou agencia para as tres pracas',
+     'Possidonio Dantas + RH', '1 a 2 semanas'],
 ]
 add_tab(['Frente critica', '% quadro aberto', 'Acao', 'Dono', 'Prazo de efeito'],
-        ACOES, fonte=7.5)
+        [[a[0], ocup(a[0]) if a[0] in BLOCOS else '', a[1], a[2], a[3]] for a in ACOES],
+        fonte=7.5)
 
 # ---- 11.4 lacunas ----
-add_h('%d.4 Lacunas a confirmar na reuniao' % SEC, 2)
+add_h('%d.4 Lacunas a confirmar' % SEC, 2)
 add_p('Nova York nao aparece como escritorio no CIS. Confirmar com a Operacao se ha volume '
       'proprio e quantas pessoas do bloco de Warehouses atendem a praca.', style='List Bullet')
-add_p('{s} das {t} vagas de Operacoes estao sem estagio de processo informado e a base traz '
-      'apenas o mes de inicio do ciclo, nao a data de abertura. Sem isso nao e possivel medir '
-      'dias em aberto por vaga, metrica necessaria para acionar headhunter acima de 45 dias.'.format(
-          s=_sem_st, t=TOT_VG_OP), style='List Bullet')
+add_p('{s} das {t} vagas abertas de Operacoes estao sem estagio de processo informado. Definir '
+      'com o RH quem atualiza o estagio de cada vaga e com que frequencia.'.format(
+          s=TOT_SEMST_OP, t=TOT_AB_OP), style='List Bullet')
+add_p('Confirmar o estado das {cf} linhas com admissao ja ocorrida e sem ocupante identificado, '
+      'para saber se sao vagas preenchidas ou ainda em aberto.'.format(
+          cf=len(VG_CONFIRMAR)), style='List Bullet')
 add_p('O CIS mostra quem executou cada etapa, mas nao o headcount por area, e o Customer Care do '
-      'Brasil atende embarques de Miami. O volume por ativo deve ser lido como ordem de grandeza '
-      'por bloco, nao como produtividade individual.', style='List Bullet')
+      'Brasil atende embarques de Miami. O numero de ativos vem do RH e o volume por ativo deve '
+      'ser lido como ordem de grandeza por bloco, nao como produtividade individual.',
+      style='List Bullet')
 add_p('Das areas sub-dimensionadas fora de Operacoes, sete seguem sem qualquer vaga: AEROSPACE '
       'INDUSTRY, COLD CHAIN, ENERGY INDUSTRY, INDUSTRIES DEVELOPMENT, STRATEGY & FINANCE, '
       'OPERATIONAL EXCELLENCE e REVENUE MANAGEMENT, somando 26 pessoas.', style='List Bullet')
@@ -655,6 +762,10 @@ FRASES = [
     ('as tres vagas ja estao publicadas', 'as três vagas já estão publicadas'),
     ('tres pracas', 'três praças'),
     ('Onde esta o maior ponto', 'Onde está o maior ponto'),
+    ('e 3 tem admissao ja ocorrida', 'e 3 têm admissão já ocorrida'),
+    ('nao tem estagio informado', 'não têm estágio informado'),
+    ('13 ja estao preenchidas', '13 já estão preenchidas'),
+    ('mas eles nao sao todos vagas em aberto', 'mas eles não são todos vagas em aberto'),
     ('Vaga parada ha mais tempo', 'Vaga parada há mais tempo'),
     ('nao ha vaga anterior a outubro', 'não há vaga anterior a outubro'),
     ('em marco e PER DEP ANALYST', 'em março é PER DEP ANALYST'),
@@ -692,6 +803,11 @@ PALAVRAS = {
     'responsavel': 'responsável', 'periodo': 'período',
     'media': 'média', 'Indicacao': 'Indicação', 'indicacao': 'indicação',
     'Possidonio': 'Possidônio', 'Natalia': 'Natália',
+    'estao': 'estão', 'admissao': 'admissão', 'Admissao': 'Admissão',
+    'Ja': 'Já',
+    'estagios': 'estágios', 'lideranca': 'liderança', 'Lideranca': 'Liderança',
+    'frequencia': 'frequência', 'reune': 'reúne', 'Restam': 'Restam',
+    'temporaria': 'temporária', 'confirmar': 'confirmar',
     'Areas': 'Áreas', 'areas': 'áreas', 'Area': 'Área', 'area': 'área',
     'Correlacao': 'Correlação', 'correlacao': 'correlação',
     'projecao': 'projeção', 'Projecao': 'Projeção',
