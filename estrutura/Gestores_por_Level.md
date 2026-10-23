@@ -2,7 +2,27 @@
 
 Fonte: **`Colaboradores-factorial (3).xlsx`**, abas `level 4` a `level 8`.
 
-**Como a planilha foi lida:** em cada aba, a pessoa da linha está no level da aba, e a **coluna B (`Nível de gerente N-1`) é o gestor direto dela**. Essas colunas vêm mescladas, então o nome vale para todo o bloco de linhas abaixo dele. Os levels 2 e 3 não têm linha própria na planilha — aparecem só como nome de gestor, por isso **não têm cargo**.
+**Como a planilha foi lida:** em cada aba, a pessoa da linha está no level da aba, e a **coluna B (`Nível de gerente N-1`) é o gestor direto dela**. Essas colunas vêm mescladas, então o nome vale para todo o bloco de linhas abaixo dele.
+
+**Os levels 2 e 3 não têm linha própria na planilha** — aparecem só como nome de gestor, sem cargo. Os cargos deles foram lidos nos organogramas do `Draft 23 Out 26.pptx` e estão marcados com a origem. Ver `Cross_Check_Organograma.md` para a conferência completa.
+
+## O topo da estrutura, com cargo
+
+| Level | Nome | Cargo | Fonte do cargo | C-LEVEL no DRE | Diretos | Indiretos | Total |
+|---|---|---|---|---|---|---|---|
+| L2 | **Jose Luiz de Oliveira Belixior Junior** | Co-Chief Executive Officer | draft s2 | Co-CEO | 6 | 329 | **335** |
+| L3 | **Raioni De Oliveira Santos** | Chief Operating Officer | draft s2/s46 | COO | 8 | 194 | **202** |
+| L3 | **Cleyton Cardoso Esteves** | Chief Information & Tec… | draft s2/s24 | CITO | 2 | 45 | **47** |
+| L3 | **Ana Carolina Botelho Caldeira Vasconcellos** | Chief Strategy Finance … | draft s2/s29 | CFSO | 7 | 26 | **33** |
+| L3 | **Carolina Karnakis de Nobrega** | Head of Talent | draft s2/s37 | Co-CEO (Talent Management Team) | 6 | 18 | **24** |
+| L3 | **Andre Lemos Tavares** | Chief Commercial Officer | draft s2/s17 | CCO | 5 | 13 | **18** |
+| L3 | **Luis Fernando Santos Muniz** | Head of Services | draft s2/s43 | Co-CEO (Services) | 5 | 0 | **5** |
+
+Dois cargos vêm truncados no print do Factorial: *Chief Information & Tec…* (Cleyton) e *Chief Strategy Finance …* (Ana Carolina). No DRE eles aparecem pelas siglas **CITO** e **CFSO**.
+
+Note que o CEO é **Co-**Chief Executive Officer. A folha de setembro tem outras duas pessoas em `OWNERSHIP` que não estão no organograma: Fernando Esteves Arruda (EXECUTIVE BOARD) e Eduardo Reis de Almeida (OWNERSHIP).
+
+---
 
 ## Quantos gestores em cada level
 
@@ -25,14 +45,14 @@ No L8 ninguém administra ninguém — é o fim da cadeia.
 
 **1 gestor** no L2, administrando 6 pessoas diretamente.
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Jose Luiz de Oliveira Belixior Junior | (cargo não informado na planilha) | **6** | 335 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Jose Luiz de Oliveira Belixior Junior | Co-Chief Executive Officer | **6** | 329 | 335 | draft 330, +5 depois |
 
 ### Jose Luiz de Oliveira Belixior Junior  ·  L2
 
-(cargo não informado na planilha)  
-Administra **6 pessoas** diretamente (335 somando todos os levels abaixo).  
+Co-Chief Executive Officer  *(cargo lido no draft s2)*  
+Administra **6 pessoas** diretamente e **329 pessoas** indiretamente, somando 335.  
 Topo da estrutura — não reporta a ninguém na planilha.
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -50,19 +70,19 @@ Topo da estrutura — não reporta a ninguém na planilha.
 
 **6 gestores** no L3, administrando 33 pessoas diretamente.
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Ana Carolina Botelho Caldeira Vasconcellos | (cargo não informado na planilha) | **7** | 33 |
-| Andre Lemos Tavares | (cargo não informado na planilha) | **5** | 18 |
-| Carolina Karnakis de Nobrega | (cargo não informado na planilha) | **6** | 24 |
-| Cleyton Cardoso Esteves | (cargo não informado na planilha) | **2** | 47 |
-| Luis Fernando Santos Muniz | (cargo não informado na planilha) | **5** | 5 |
-| Raioni De Oliveira Santos | (cargo não informado na planilha) | **8** | 202 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Ana Carolina Botelho Caldeira Vasconcellos | Chief Strategy Finance … | **7** | 26 | 33 | sim (s2/s29) |
+| Andre Lemos Tavares | Chief Commercial Officer | **5** | 13 | 18 | draft 17, +1 depois |
+| Carolina Karnakis de Nobrega | Head of Talent | **6** | 18 | 24 | draft 23, +1 depois |
+| Cleyton Cardoso Esteves | Chief Information & Tec… | **2** | 45 | 47 | sim (s2/s24) |
+| Luis Fernando Santos Muniz | Head of Services | **5** | 0 | 5 | sim (s2/s43) |
+| Raioni De Oliveira Santos | Chief Operating Officer | **8** | 194 | 202 | draft 199, +3 depois |
 
 ### Ana Carolina Botelho Caldeira Vasconcellos  ·  L3
 
-(cargo não informado na planilha)  
-Administra **7 pessoas** diretamente (33 somando todos os levels abaixo).  
+Chief Strategy Finance …  *(cargo lido no draft s2/s29)*  
+Administra **7 pessoas** diretamente e **26 pessoas** indiretamente, somando 33.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -77,8 +97,8 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 ### Andre Lemos Tavares  ·  L3
 
-(cargo não informado na planilha)  
-Administra **5 pessoas** diretamente (18 somando todos os levels abaixo).  
+Chief Commercial Officer  *(cargo lido no draft s2/s17)*  
+Administra **5 pessoas** diretamente e **13 pessoas** indiretamente, somando 18.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -91,8 +111,8 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 ### Carolina Karnakis de Nobrega  ·  L3
 
-(cargo não informado na planilha)  
-Administra **6 pessoas** diretamente (24 somando todos os levels abaixo).  
+Head of Talent  *(cargo lido no draft s2/s37)*  
+Administra **6 pessoas** diretamente e **18 pessoas** indiretamente, somando 24.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -106,8 +126,8 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 ### Cleyton Cardoso Esteves  ·  L3
 
-(cargo não informado na planilha)  
-Administra **2 pessoas** diretamente (47 somando todos os levels abaixo).  
+Chief Information & Tec…  *(cargo lido no draft s2/s24)*  
+Administra **2 pessoas** diretamente e **45 pessoas** indiretamente, somando 47.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -117,8 +137,8 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 ### Luis Fernando Santos Muniz  ·  L3
 
-(cargo não informado na planilha)  
-Administra **5 pessoas** diretamente (5 somando todos os levels abaixo).  
+Head of Services  *(cargo lido no draft s2/s43)*  
+Administra **5 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -131,8 +151,8 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 ### Raioni De Oliveira Santos  ·  L3
 
-(cargo não informado na planilha)  
-Administra **8 pessoas** diretamente (202 somando todos os levels abaixo).  
+Chief Operating Officer  *(cargo lido no draft s2/s46)*  
+Administra **8 pessoas** diretamente e **194 pessoas** indiretamente, somando 202.  
 Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -154,33 +174,33 @@ Reporta a: **Jose Luiz de Oliveira Belixior Junior** (L2)
 
 (as outras 13 pessoas do L4 não administram ninguém — listadas no fim do bloco)
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Ivan Garcia Castro | Global Head of Aerospace | **2** | 2 |
-| Yuri Da Silva Torreao | Head of Energy Industry | **1** | 3 |
-| Ricardo Tebexreni Jakowatz | Head Of Automotive Industry & Industries Development | **2** | 6 |
-| Jose Carlos Duarte Freitas Sobrinho | Head of Healthcare Industry | **2** | 2 |
-| Victor Telles Gonzaga | Head of Operation | **27** | 37 |
-| Julio Cesar Francisco de Souza | Service Desk Team Leader | **8** | 8 |
-| Roberta Duarte Correia | Head Of Financial | **3** | 18 |
-| Daniel de Carvalho Herrera Braga | Head of Financial Planning & Analysis | **8** | 8 |
-| Carolina Bento Mendoza | Head Of Air Operations | **4** | 85 |
-| Filipe Carneiro De Oliveira | Head of Ocean Product | **4** | 18 |
-| Lucy Maia De Moraes | Head of Cold Chain | **2** | 2 |
-| Natalia Correia Da Costa Parreira | Head of Ocean Operations | **6** | 35 |
-| Marco Antonio Maraia Villa | Head of Quality & Operational Intelligence | **6** | 12 |
-| Possidonio Dantas de Almeida Neto | Head of Overland | **3** | 8 |
-| Jonathas Amancio Alves | Head of Operational Excellence | **6** | 6 |
-| Filipe Teixeira Sampaio | Head of Air Product | **2** | 28 |
-| Vivian Ramalho De Assumpçao | Talent Development Team Leader | **6** | 6 |
-| Rodrigo Fontes Dominciano | Human Resources Sr. Team Leader | **7** | 8 |
-| Cristiane Martins Soares Giovanelli | Total Rewards & People Analytics Team Leader | **1** | 1 |
-| Leandro Teciano | Communication Team Leader | **3** | 3 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Ivan Garcia Castro | Global Head of Aerospace | **2** | 0 | 2 | sim (s17) |
+| Yuri Da Silva Torreao | Head of Energy Industry | **1** | 2 | 3 | sim (s17) |
+| Ricardo Tebexreni Jakowatz | Head Of Automotive Industry & Industries Development | **2** | 4 | 6 | draft 5, +1 depois |
+| Jose Carlos Duarte Freitas Sobrinho | Head of Healthcare Industry | **2** | 0 | 2 | sim (s17) |
+| Victor Telles Gonzaga | Head of Operation | **27** | 10 | 37 | sim (s24/s26) |
+| Julio Cesar Francisco de Souza | Service Desk Team Leader | **8** | 0 | 8 | sim (s24/s25) |
+| Roberta Duarte Correia | Head Of Financial | **3** | 15 | 18 | sim (s29/s30) |
+| Daniel de Carvalho Herrera Braga | Head of Financial Planning & Analysis | **8** | 0 | 8 | sim (s29) |
+| Carolina Bento Mendoza | Head Of Air Operations | **4** | 81 | 85 | draft 82, +3 depois |
+| Filipe Carneiro De Oliveira | Head of Ocean Product | **4** | 14 | 18 | sim (s46/s11) |
+| Lucy Maia De Moraes | Head of Cold Chain | **2** | 0 | 2 | sim (s46) |
+| Natalia Correia Da Costa Parreira | Head of Ocean Operations | **6** | 29 | 35 | sim (s46/s58) |
+| Marco Antonio Maraia Villa | Head of Quality & Operational Intelligence | **6** | 6 | 12 | sim (s46/s71) |
+| Possidonio Dantas de Almeida Neto | Head of Overland | **3** | 5 | 8 | sim (s46/s65) |
+| Jonathas Amancio Alves | Head of Operational Excellence | **6** | 0 | 6 | sim (s46/s75) |
+| Filipe Teixeira Sampaio | Head of Air Product | **2** | 26 | 28 | sim (s46/s4) |
+| Vivian Ramalho De Assumpçao | Talent Development Team Leader | **6** | 0 | 6 | draft 5, +1 depois |
+| Rodrigo Fontes Dominciano | Human Resources Sr. Team Leader | **7** | 1 | 8 | sim (s37/s39) |
+| Cristiane Martins Soares Giovanelli | Total Rewards & People Analytics Team Leader | **1** | 0 | 1 | sim (s37/s40) |
+| Leandro Teciano | Communication Team Leader | **3** | 0 | 3 | sim (s37/s40) |
 
 ### Ivan Garcia Castro  ·  L4
 
 Global Head of Aerospace  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Andre Lemos Tavares** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -191,7 +211,7 @@ Reporta a: **Andre Lemos Tavares** (L3)
 ### Yuri Da Silva Torreao  ·  L4
 
 Head of Energy Industry  
-Administra **1 pessoa** diretamente (3 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente e **2 pessoas** indiretamente, somando 3.  
 Reporta a: **Andre Lemos Tavares** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -201,7 +221,7 @@ Reporta a: **Andre Lemos Tavares** (L3)
 ### Ricardo Tebexreni Jakowatz  ·  L4
 
 Head Of Automotive Industry & Industries Development  
-Administra **2 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente e **4 pessoas** indiretamente, somando 6.  
 Reporta a: **Andre Lemos Tavares** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -212,7 +232,7 @@ Reporta a: **Andre Lemos Tavares** (L3)
 ### Jose Carlos Duarte Freitas Sobrinho  ·  L4
 
 Head of Healthcare Industry  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Andre Lemos Tavares** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -223,7 +243,7 @@ Reporta a: **Andre Lemos Tavares** (L3)
 ### Victor Telles Gonzaga  ·  L4
 
 Head of Operation  
-Administra **27 pessoas** diretamente (37 somando todos os levels abaixo).  
+Administra **27 pessoas** diretamente e **10 pessoas** indiretamente, somando 37.  
 Reporta a: **Cleyton Cardoso Esteves** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -259,7 +279,7 @@ Reporta a: **Cleyton Cardoso Esteves** (L3)
 ### Julio Cesar Francisco de Souza  ·  L4
 
 Service Desk Team Leader  
-Administra **8 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **8 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Cleyton Cardoso Esteves** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -276,7 +296,7 @@ Reporta a: **Cleyton Cardoso Esteves** (L3)
 ### Roberta Duarte Correia  ·  L4
 
 Head Of Financial  
-Administra **3 pessoas** diretamente (18 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente e **15 pessoas** indiretamente, somando 18.  
 Reporta a: **Ana Carolina Botelho Caldeira Vasconcellos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -288,7 +308,7 @@ Reporta a: **Ana Carolina Botelho Caldeira Vasconcellos** (L3)
 ### Daniel de Carvalho Herrera Braga  ·  L4
 
 Head of Financial Planning & Analysis  
-Administra **8 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **8 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Ana Carolina Botelho Caldeira Vasconcellos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -305,7 +325,7 @@ Reporta a: **Ana Carolina Botelho Caldeira Vasconcellos** (L3)
 ### Carolina Bento Mendoza  ·  L4
 
 Head Of Air Operations  
-Administra **4 pessoas** diretamente (85 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente e **81 pessoas** indiretamente, somando 85.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -318,7 +338,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Filipe Carneiro De Oliveira  ·  L4
 
 Head of Ocean Product  
-Administra **4 pessoas** diretamente (18 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente e **14 pessoas** indiretamente, somando 18.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -331,7 +351,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Lucy Maia De Moraes  ·  L4
 
 Head of Cold Chain  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -342,7 +362,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Natalia Correia Da Costa Parreira  ·  L4
 
 Head of Ocean Operations  
-Administra **6 pessoas** diretamente (35 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente e **29 pessoas** indiretamente, somando 35.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -357,7 +377,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Marco Antonio Maraia Villa  ·  L4
 
 Head of Quality & Operational Intelligence  
-Administra **6 pessoas** diretamente (12 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente e **6 pessoas** indiretamente, somando 12.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -372,7 +392,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Possidonio Dantas de Almeida Neto  ·  L4
 
 Head of Overland  
-Administra **3 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente e **5 pessoas** indiretamente, somando 8.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -384,7 +404,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Jonathas Amancio Alves  ·  L4
 
 Head of Operational Excellence  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -399,7 +419,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Filipe Teixeira Sampaio  ·  L4
 
 Head of Air Product  
-Administra **2 pessoas** diretamente (28 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente e **26 pessoas** indiretamente, somando 28.  
 Reporta a: **Raioni De Oliveira Santos** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -410,7 +430,7 @@ Reporta a: **Raioni De Oliveira Santos** (L3)
 ### Vivian Ramalho De Assumpçao  ·  L4
 
 Talent Development Team Leader  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Carolina Karnakis de Nobrega** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -425,7 +445,7 @@ Reporta a: **Carolina Karnakis de Nobrega** (L3)
 ### Rodrigo Fontes Dominciano  ·  L4
 
 Human Resources Sr. Team Leader  
-Administra **7 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **7 pessoas** diretamente e **1 pessoa** indiretamente, somando 8.  
 Reporta a: **Carolina Karnakis de Nobrega** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -441,7 +461,7 @@ Reporta a: **Carolina Karnakis de Nobrega** (L3)
 ### Cristiane Martins Soares Giovanelli  ·  L4
 
 Total Rewards & People Analytics Team Leader  
-Administra **1 pessoa** diretamente (1 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Carolina Karnakis de Nobrega** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -451,7 +471,7 @@ Reporta a: **Carolina Karnakis de Nobrega** (L3)
 ### Leandro Teciano  ·  L4
 
 Communication Team Leader  
-Administra **3 pessoas** diretamente (3 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Carolina Karnakis de Nobrega** (L3)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -486,38 +506,38 @@ Reporta a: **Carolina Karnakis de Nobrega** (L3)
 
 (as outras 78 pessoas do L5 não administram ninguém — listadas no fim do bloco)
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Nathalia Santos Reis Cordeiro | Business Development Team Leader | **2** | 2 |
-| Danielle Moreira Rabelo Machado | Business Development Team Leader | **2** | 2 |
-| Marcelo Portantiolo de Lima | Business Development Team Leader | **2** | 2 |
-| Leonardo Ferreira Sabbadim | DS & MLOPs Team Leader | **4** | 4 |
-| Lucca Montorfano Cruz Santos | Digital Operations Team Leader | **6** | 6 |
-| Andressa Franco Da Silva | Financial Team Leader | **2** | 2 |
-| Camila Evelyn De Souza Lima | Financial Team Leader | **8** | 8 |
-| Gisele Ferreira Pinto | Financial Team Leader | **5** | 5 |
-| Julia Sena Campelo Lopes | Air Freight Operations Team Leader | **4** | 4 |
-| Thais Pinho Cosenza | Air Freight Customer Care Senior Team Leader | **4** | 27 |
-| Daniela Bueno dos Reis Craig | Air Freight Lead Coordinator | **4** | 50 |
-| Rony Ghiu De Moraes Rego Da Silva | Ocean Strategy Development Team Leader | **3** | 3 |
-| Ivy Kaori Oishi | Ocean Freight Design Team Leader | **6** | 6 |
-| Luiz Antonio Duarte Ferreira Junior | Ocean Route Development Team Leader | **5** | 5 |
-| Andrea Oliveira Brito Do Couto | Ocean Freight Operations Team Leader | **2** | 2 |
-| Kayza Cristina Silva Pereira | Ocean Freight Operations Team Leader | **12** | 12 |
-| Augusto Cesar Sotelo Medeiros | Ocean Freight Customer Care Team Leader | **4** | 4 |
-| Leonardo Araujo de Menezes | Ocean Freight Operations Team Leader | **7** | 7 |
-| Ricardo Dos Reis Castro | Ocean Freight Customer Care Team Leader | **4** | 4 |
-| Natalie Giseli De Maria Correa | Quality & Improvement Team Leader | **2** | 2 |
-| Caio Vitor de Carvalho Santos | Quality & Operational Intelligence Team Leader | **4** | 4 |
-| Jesus Guillermo Ledi Mendoza | Warehouse Team Leader | **5** | 5 |
-| Joao Pedro Da Costa Marcicano Rodrigues | Air Product Senior Team Leader | **4** | 23 |
-| Tayna Neves | Air Strategy Development Team Leader | **3** | 3 |
-| Katharine Ferreira De Souza | Personnel Department Analyst | **1** | 1 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Nathalia Santos Reis Cordeiro | Business Development Team Leader | **2** | 0 | 2 | — |
+| Danielle Moreira Rabelo Machado | Business Development Team Leader | **2** | 0 | 2 | draft 1, +1 depois |
+| Marcelo Portantiolo de Lima | Business Development Team Leader | **2** | 0 | 2 | sim (s20) |
+| Leonardo Ferreira Sabbadim | DS & MLOPs Team Leader | **4** | 0 | 4 | — |
+| Lucca Montorfano Cruz Santos | Digital Operations Team Leader | **6** | 0 | 6 | — |
+| Andressa Franco Da Silva | Financial Team Leader | **2** | 0 | 2 | sim (s30) |
+| Camila Evelyn De Souza Lima | Financial Team Leader | **8** | 0 | 8 | sim (s30) |
+| Gisele Ferreira Pinto | Financial Team Leader | **5** | 0 | 5 | sim (s30) |
+| Julia Sena Campelo Lopes | Air Freight Operations Team Leader | **4** | 0 | 4 | sim (s48/s49) |
+| Thais Pinho Cosenza | Air Freight Customer Care Senior Team Leader | **4** | 23 | 27 | sim (s48/s50) |
+| Daniela Bueno dos Reis Craig | Air Freight Lead Coordinator | **4** | 46 | 50 | draft 47, +3 depois |
+| Rony Ghiu De Moraes Rego Da Silva | Ocean Strategy Development Team Leader | **3** | 0 | 3 | sim (s11/s12) |
+| Ivy Kaori Oishi | Ocean Freight Design Team Leader | **6** | 0 | 6 | sim (s11/s13) |
+| Luiz Antonio Duarte Ferreira Junior | Ocean Route Development Team Leader | **5** | 0 | 5 | sim (s11/s14) |
+| Andrea Oliveira Brito Do Couto | Ocean Freight Operations Team Leader | **2** | 0 | 2 | sim (s58) |
+| Kayza Cristina Silva Pereira | Ocean Freight Operations Team Leader | **12** | 0 | 12 | sim (s58) |
+| Augusto Cesar Sotelo Medeiros | Ocean Freight Customer Care Team Leader | **4** | 0 | 4 | sim (s58) |
+| Leonardo Araujo de Menezes | Ocean Freight Operations Team Leader | **7** | 0 | 7 | sim (s58) |
+| Ricardo Dos Reis Castro | Ocean Freight Customer Care Team Leader | **4** | 0 | 4 | sim (s58) |
+| Natalie Giseli De Maria Correa | Quality & Improvement Team Leader | **2** | 0 | 2 | sim (s71/s72) |
+| Caio Vitor de Carvalho Santos | Quality & Operational Intelligence Team Leader | **4** | 0 | 4 | sim (s71/s73) |
+| Jesus Guillermo Ledi Mendoza | Warehouse Team Leader | **5** | 0 | 5 | sim (s65/s66) |
+| Joao Pedro Da Costa Marcicano Rodrigues | Air Product Senior Team Leader | **4** | 19 | 23 | sim (s4/s5) |
+| Tayna Neves | Air Strategy Development Team Leader | **3** | 0 | 3 | sim (s4/s9) |
+| Katharine Ferreira De Souza | Personnel Department Analyst | **1** | 0 | 1 | sim (s39) |
 
 ### Nathalia Santos Reis Cordeiro  ·  L5
 
 Business Development Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Yuri Da Silva Torreao** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -528,7 +548,7 @@ Reporta a: **Yuri Da Silva Torreao** (L4)
 ### Danielle Moreira Rabelo Machado  ·  L5
 
 Business Development Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Ricardo Tebexreni Jakowatz** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -539,7 +559,7 @@ Reporta a: **Ricardo Tebexreni Jakowatz** (L4)
 ### Marcelo Portantiolo de Lima  ·  L5
 
 Business Development Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Ricardo Tebexreni Jakowatz** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -550,7 +570,7 @@ Reporta a: **Ricardo Tebexreni Jakowatz** (L4)
 ### Leonardo Ferreira Sabbadim  ·  L5
 
 DS & MLOPs Team Leader  
-Administra **4 pessoas** diretamente (4 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Victor Telles Gonzaga** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -563,7 +583,7 @@ Reporta a: **Victor Telles Gonzaga** (L4)
 ### Lucca Montorfano Cruz Santos  ·  L5
 
 Digital Operations Team Leader  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Victor Telles Gonzaga** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -578,7 +598,7 @@ Reporta a: **Victor Telles Gonzaga** (L4)
 ### Andressa Franco Da Silva  ·  L5
 
 Financial Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Roberta Duarte Correia** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -589,7 +609,7 @@ Reporta a: **Roberta Duarte Correia** (L4)
 ### Camila Evelyn De Souza Lima  ·  L5
 
 Financial Team Leader  
-Administra **8 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **8 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Roberta Duarte Correia** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -606,7 +626,7 @@ Reporta a: **Roberta Duarte Correia** (L4)
 ### Gisele Ferreira Pinto  ·  L5
 
 Financial Team Leader  
-Administra **5 pessoas** diretamente (5 somando todos os levels abaixo).  
+Administra **5 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Roberta Duarte Correia** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -620,7 +640,7 @@ Reporta a: **Roberta Duarte Correia** (L4)
 ### Julia Sena Campelo Lopes  ·  L5
 
 Air Freight Operations Team Leader  
-Administra **4 pessoas** diretamente (4 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Carolina Bento Mendoza** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -633,7 +653,7 @@ Reporta a: **Carolina Bento Mendoza** (L4)
 ### Thais Pinho Cosenza  ·  L5
 
 Air Freight Customer Care Senior Team Leader  
-Administra **4 pessoas** diretamente (27 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente e **23 pessoas** indiretamente, somando 27.  
 Reporta a: **Carolina Bento Mendoza** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -646,7 +666,7 @@ Reporta a: **Carolina Bento Mendoza** (L4)
 ### Daniela Bueno dos Reis Craig  ·  L5
 
 Air Freight Lead Coordinator  
-Administra **4 pessoas** diretamente (50 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente e **46 pessoas** indiretamente, somando 50.  
 Reporta a: **Carolina Bento Mendoza** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -659,7 +679,7 @@ Reporta a: **Carolina Bento Mendoza** (L4)
 ### Rony Ghiu De Moraes Rego Da Silva  ·  L5
 
 Ocean Strategy Development Team Leader  
-Administra **3 pessoas** diretamente (3 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Filipe Carneiro De Oliveira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -671,7 +691,7 @@ Reporta a: **Filipe Carneiro De Oliveira** (L4)
 ### Ivy Kaori Oishi  ·  L5
 
 Ocean Freight Design Team Leader  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Filipe Carneiro De Oliveira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -686,7 +706,7 @@ Reporta a: **Filipe Carneiro De Oliveira** (L4)
 ### Luiz Antonio Duarte Ferreira Junior  ·  L5
 
 Ocean Route Development Team Leader  
-Administra **5 pessoas** diretamente (5 somando todos os levels abaixo).  
+Administra **5 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Filipe Carneiro De Oliveira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -700,7 +720,7 @@ Reporta a: **Filipe Carneiro De Oliveira** (L4)
 ### Andrea Oliveira Brito Do Couto  ·  L5
 
 Ocean Freight Operations Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -711,7 +731,7 @@ Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 ### Kayza Cristina Silva Pereira  ·  L5
 
 Ocean Freight Operations Team Leader  
-Administra **12 pessoas** diretamente (12 somando todos os levels abaixo).  
+Administra **12 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -732,7 +752,7 @@ Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 ### Augusto Cesar Sotelo Medeiros  ·  L5
 
 Ocean Freight Customer Care Team Leader  
-Administra **4 pessoas** diretamente (4 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -745,7 +765,7 @@ Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 ### Leonardo Araujo de Menezes  ·  L5
 
 Ocean Freight Operations Team Leader  
-Administra **7 pessoas** diretamente (7 somando todos os levels abaixo).  
+Administra **7 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -761,7 +781,7 @@ Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 ### Ricardo Dos Reis Castro  ·  L5
 
 Ocean Freight Customer Care Team Leader  
-Administra **4 pessoas** diretamente (4 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -774,7 +794,7 @@ Reporta a: **Natalia Correia Da Costa Parreira** (L4)
 ### Natalie Giseli De Maria Correa  ·  L5
 
 Quality & Improvement Team Leader  
-Administra **2 pessoas** diretamente (2 somando todos os levels abaixo).  
+Administra **2 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Marco Antonio Maraia Villa** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -785,7 +805,7 @@ Reporta a: **Marco Antonio Maraia Villa** (L4)
 ### Caio Vitor de Carvalho Santos  ·  L5
 
 Quality & Operational Intelligence Team Leader  
-Administra **4 pessoas** diretamente (4 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Marco Antonio Maraia Villa** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -798,7 +818,7 @@ Reporta a: **Marco Antonio Maraia Villa** (L4)
 ### Jesus Guillermo Ledi Mendoza  ·  L5
 
 Warehouse Team Leader  
-Administra **5 pessoas** diretamente (5 somando todos os levels abaixo).  
+Administra **5 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Possidonio Dantas de Almeida Neto** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -812,7 +832,7 @@ Reporta a: **Possidonio Dantas de Almeida Neto** (L4)
 ### Joao Pedro Da Costa Marcicano Rodrigues  ·  L5
 
 Air Product Senior Team Leader  
-Administra **4 pessoas** diretamente (23 somando todos os levels abaixo).  
+Administra **4 pessoas** diretamente e **19 pessoas** indiretamente, somando 23.  
 Reporta a: **Filipe Teixeira Sampaio** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -825,7 +845,7 @@ Reporta a: **Filipe Teixeira Sampaio** (L4)
 ### Tayna Neves  ·  L5
 
 Air Strategy Development Team Leader  
-Administra **3 pessoas** diretamente (3 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Filipe Teixeira Sampaio** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -837,7 +857,7 @@ Reporta a: **Filipe Teixeira Sampaio** (L4)
 ### Katharine Ferreira De Souza  ·  L5
 
 Personnel Department Analyst  
-Administra **1 pessoa** diretamente (1 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Rodrigo Fontes Dominciano** (L4)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -935,23 +955,23 @@ Reporta a: **Rodrigo Fontes Dominciano** (L4)
 
 (as outras 95 pessoas do L6 não administram ninguém — listadas no fim do bloco)
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Isabelle Carolina De Melo Martinez Lizama | Air Freight Customer Care Team Leader | **3** | 3 |
-| Leonardo Bonamichi Vaz de Lima | Air Freight Customer Care Team Leader | **8** | 8 |
-| Rubia Furtado | Air Freight Customer Care Team Leader | **12** | 12 |
-| Adriane Borel Cordeiro Impagliazzo | Air Freight Operations Team Leader | **6** | 6 |
-| Gabriella De Melo Pereira | Air Freight Operations Team Leader | **9** | 16 |
-| Pamela Iris Gregorio Ibarra | Air Freight Operations Team Leader | **13** | 23 |
-| Charlete Alfaia Guimaraes Santana | Multimodal Team Leader | **1** | 1 |
-| Dandara Cristina Santos Ru | Air Route Development Team Leader | **7** | 7 |
-| Rafael Araujo Belfiore | Air Freight Design Team Leader | **7** | 7 |
-| Vinicius Teixeira Studart Pereira | Air Freight Design Team Leader | **5** | 5 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Isabelle Carolina De Melo Martinez Lizama | Air Freight Customer Care Team Leader | **3** | 0 | 3 | sim (s50/s51) |
+| Leonardo Bonamichi Vaz de Lima | Air Freight Customer Care Team Leader | **8** | 0 | 8 | sim (s50/s52) |
+| Rubia Furtado | Air Freight Customer Care Team Leader | **12** | 0 | 12 | sim (s50) |
+| Adriane Borel Cordeiro Impagliazzo | Air Freight Operations Team Leader | **6** | 0 | 6 | draft 5, +1 depois |
+| Gabriella De Melo Pereira | Air Freight Operations Team Leader | **9** | 7 | 16 | sim (s54/s67) |
+| Pamela Iris Gregorio Ibarra | Air Freight Operations Team Leader | **13** | 10 | 23 | draft 21, +2 depois |
+| Charlete Alfaia Guimaraes Santana | Multimodal Team Leader | **1** | 0 | 1 | sim (s54) |
+| Dandara Cristina Santos Ru | Air Route Development Team Leader | **7** | 0 | 7 | sim (s5/s6) |
+| Rafael Araujo Belfiore | Air Freight Design Team Leader | **7** | 0 | 7 | sim (s5/s7) |
+| Vinicius Teixeira Studart Pereira | Air Freight Design Team Leader | **5** | 0 | 5 | sim (s5/s8) |
 
 ### Isabelle Carolina De Melo Martinez Lizama  ·  L6
 
 Air Freight Customer Care Team Leader  
-Administra **3 pessoas** diretamente (3 somando todos os levels abaixo).  
+Administra **3 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Thais Pinho Cosenza** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -963,7 +983,7 @@ Reporta a: **Thais Pinho Cosenza** (L5)
 ### Leonardo Bonamichi Vaz de Lima  ·  L6
 
 Air Freight Customer Care Team Leader  
-Administra **8 pessoas** diretamente (8 somando todos os levels abaixo).  
+Administra **8 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Thais Pinho Cosenza** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -980,7 +1000,7 @@ Reporta a: **Thais Pinho Cosenza** (L5)
 ### Rubia Furtado  ·  L6
 
 Air Freight Customer Care Team Leader  
-Administra **12 pessoas** diretamente (12 somando todos os levels abaixo).  
+Administra **12 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Thais Pinho Cosenza** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1001,7 +1021,7 @@ Reporta a: **Thais Pinho Cosenza** (L5)
 ### Adriane Borel Cordeiro Impagliazzo  ·  L6
 
 Air Freight Operations Team Leader  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1016,7 +1036,7 @@ Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 ### Gabriella De Melo Pereira  ·  L6
 
 Air Freight Operations Team Leader  
-Administra **9 pessoas** diretamente (16 somando todos os levels abaixo).  
+Administra **9 pessoas** diretamente e **7 pessoas** indiretamente, somando 16.  
 Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1034,7 +1054,7 @@ Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 ### Pamela Iris Gregorio Ibarra  ·  L6
 
 Air Freight Operations Team Leader  
-Administra **13 pessoas** diretamente (23 somando todos os levels abaixo).  
+Administra **13 pessoas** diretamente e **10 pessoas** indiretamente, somando 23.  
 Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1056,7 +1076,7 @@ Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 ### Charlete Alfaia Guimaraes Santana  ·  L6
 
 Multimodal Team Leader  
-Administra **1 pessoa** diretamente (1 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1066,7 +1086,7 @@ Reporta a: **Daniela Bueno dos Reis Craig** (L5)
 ### Dandara Cristina Santos Ru  ·  L6
 
 Air Route Development Team Leader  
-Administra **7 pessoas** diretamente (7 somando todos os levels abaixo).  
+Administra **7 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1082,7 +1102,7 @@ Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 ### Rafael Araujo Belfiore  ·  L6
 
 Air Freight Design Team Leader  
-Administra **7 pessoas** diretamente (7 somando todos os levels abaixo).  
+Administra **7 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1098,7 +1118,7 @@ Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 ### Vinicius Teixeira Studart Pereira  ·  L6
 
 Air Freight Design Team Leader  
-Administra **5 pessoas** diretamente (5 somando todos os levels abaixo).  
+Administra **5 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1217,17 +1237,17 @@ Reporta a: **Joao Pedro Da Costa Marcicano Rodrigues** (L5)
 
 (as outras 67 pessoas do L7 não administram ninguém — listadas no fim do bloco)
 
-| Gestor | Cargo | Administra (diretos) | Total abaixo dele |
-|---|---|---|---|
-| Julia Heinrichs Pimentel | Air Freight Operations Team Leader | **6** | 6 |
-| Lenice Maria da Costa Barbosa | Air Freight Operations Team Leader | **1** | 1 |
-| Julia Olegario Varella | Air Freight Operations Team Leader | **1** | 1 |
-| Thais Espindola Oliveira Mathias | Air Freight Operations Team Leader | **9** | 9 |
+| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |
+|---|---|---|---|---|---|
+| Julia Heinrichs Pimentel | Air Freight Operations Team Leader | **6** | 0 | 6 | sim (s67) |
+| Lenice Maria da Costa Barbosa | Air Freight Operations Team Leader | **1** | 0 | 1 | sim (s67) |
+| Julia Olegario Varella | Air Freight Operations Team Leader | **1** | 0 | 1 | sim (s69) |
+| Thais Espindola Oliveira Mathias | Air Freight Operations Team Leader | **9** | 0 | 9 | draft 8, +1 depois |
 
 ### Julia Heinrichs Pimentel  ·  L7
 
 Air Freight Operations Team Leader  
-Administra **6 pessoas** diretamente (6 somando todos os levels abaixo).  
+Administra **6 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Gabriella De Melo Pereira** (L6)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1242,7 +1262,7 @@ Reporta a: **Gabriella De Melo Pereira** (L6)
 ### Lenice Maria da Costa Barbosa  ·  L7
 
 Air Freight Operations Team Leader  
-Administra **1 pessoa** diretamente (1 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Gabriella De Melo Pereira** (L6)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1252,7 +1272,7 @@ Reporta a: **Gabriella De Melo Pereira** (L6)
 ### Julia Olegario Varella  ·  L7
 
 Air Freight Operations Team Leader  
-Administra **1 pessoa** diretamente (1 somando todos os levels abaixo).  
+Administra **1 pessoa** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Pamela Iris Gregorio Ibarra** (L6)
 
 | # | Administra | Cargo | Level | Esse também administra? |
@@ -1262,7 +1282,7 @@ Reporta a: **Pamela Iris Gregorio Ibarra** (L6)
 ### Thais Espindola Oliveira Mathias  ·  L7
 
 Air Freight Operations Team Leader  
-Administra **9 pessoas** diretamente (9 somando todos os levels abaixo).  
+Administra **9 pessoas** diretamente — nenhum indireto: o time todo é de executores.  
 Reporta a: **Pamela Iris Gregorio Ibarra** (L6)
 
 | # | Administra | Cargo | Level | Esse também administra? |

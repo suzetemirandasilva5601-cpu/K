@@ -25,12 +25,22 @@ import openpyxl
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
+from cross_check import CARGOS_DRAFT, C_LEVEL_DRE, DRAFT_LIDERADOS
+
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ORIGEM = os.path.join(RAIZ, "Colaboradores-factorial (3).xlsx")
 SAIDA = os.path.join(RAIZ, "estrutura")
 
 NIVEL_ABA = {"level 4": 4, "level 5": 5, "level 6": 6, "level 7": 7, "level 8": 8}
 SEM_CARGO = "(cargo não informado na planilha)"
+
+
+def cargo_refinado(p):
+    """Cargo da planilha; para L2/L3 usa o cargo lido no draft."""
+    if p["nome"] in CARGOS_DRAFT:
+        cargo, slide, trunc = CARGOS_DRAFT[p["nome"]]
+        return cargo, f"draft {slide}"
+    return (p["cargo"], "planilha") if p["cargo"] else (SEM_CARGO, "—")
 
 
 def plural(n, singular, plural_=None):
@@ -99,6 +109,7 @@ def organizar(pessoas):
 
     for p in pessoas:
         p["total"] = total(p["nome"])
+        p["indiretos"] = p["total"] - p["diretos"]
 
     for k in liderados:
         liderados[k].sort(key=lambda x: (-x["diretos"], x["nome"]))
@@ -123,8 +134,35 @@ def gerar_md(pessoas, liderados):
     A("**Como a planilha foi lida:** em cada aba, a pessoa da linha está no level "
       "da aba, e a **coluna B (`Nível de gerente N-1`) é o gestor direto dela**. "
       "Essas colunas vêm mescladas, então o nome vale para todo o bloco de linhas "
-      "abaixo dele. Os levels 2 e 3 não têm linha própria na planilha — aparecem só "
-      "como nome de gestor, por isso **não têm cargo**.")
+      "abaixo dele.")
+    A("")
+    A("**Os levels 2 e 3 não têm linha própria na planilha** — aparecem só como nome "
+      "de gestor, sem cargo. Os cargos deles foram lidos nos organogramas do "
+      "`Draft 23 Out 26.pptx` e estão marcados com a origem. "
+      "Ver `Cross_Check_Organograma.md` para a conferência completa.")
+    A("")
+
+    # ---- topo da estrutura
+    A("## O topo da estrutura, com cargo")
+    A("")
+    A("| Level | Nome | Cargo | Fonte do cargo | C-LEVEL no DRE | Diretos | Indiretos | Total |")
+    A("|---|---|---|---|---|---|---|---|")
+    for p in sorted([x for x in pessoas if x["level"] <= 3],
+                    key=lambda x: (x["level"], -x["total"])):
+        cargo, fonte = cargo_refinado(p)
+        A(f"| L{p['level']} | **{p['nome']}** | {cargo} | {fonte} "
+          f"| {C_LEVEL_DRE.get(p['nome'], '—')} | {p['diretos']} | {p['indiretos']} "
+          f"| **{p['total']}** |")
+    A("")
+    A("Dois cargos vêm truncados no print do Factorial: *Chief Information & Tec…* "
+      "(Cleyton) e *Chief Strategy Finance …* (Ana Carolina). No DRE eles aparecem "
+      "pelas siglas **CITO** e **CFSO**.")
+    A("")
+    A("Note que o CEO é **Co-**Chief Executive Officer. A folha de setembro tem outras "
+      "duas pessoas em `OWNERSHIP` que não estão no organograma: "
+      "Fernando Esteves Arruda (EXECUTIVE BOARD) e Eduardo Reis de Almeida (OWNERSHIP).")
+    A("")
+    A("---")
     A("")
 
     # ---- indice
@@ -172,18 +210,28 @@ def gerar_md(pessoas, liderados):
             A(f"(as outras {len(simples)} pessoas do L{n} não administram ninguém — "
               "listadas no fim do bloco)")
         A("")
-        A("| Gestor | Cargo | Administra (diretos) | Total abaixo dele |")
-        A("|---|---|---|---|")
+        A("| Gestor | Cargo | Diretos | Indiretos | Total abaixo | Confere com o draft? |")
+        A("|---|---|---|---|---|---|")
         for p in gestores:
-            A(f"| {p['nome']} | {cargo_de(p)} | **{p['diretos']}** | {p['total']} |")
+            cargo, _ = cargo_refinado(p)
+            d = DRAFT_LIDERADOS.get(p["nome"])
+            ok = ("—" if not d else
+                  f"sim ({d[1]})" if d[0] == p["total"] else
+                  f"draft {d[0]}, +{p['total']-d[0]} depois")
+            A(f"| {p['nome']} | {cargo} | **{p['diretos']}** | {p['indiretos']} "
+              f"| {p['total']} | {ok} |")
         A("")
 
         for p in gestores:
+            cargo, fonte = cargo_refinado(p)
             A(f"### {p['nome']}  ·  L{n}")
             A("")
-            A(f"{cargo_de(p)}  \n"
-              f"Administra **{plural(p['diretos'], 'pessoa')}** diretamente "
-              f"({p['total']} somando todos os levels abaixo)."
+            A(f"{cargo}" + (f"  *(cargo lido no {fonte})*" if fonte.startswith("draft")
+                            else "") + "  ")
+            A(f"Administra **{plural(p['diretos'], 'pessoa')}** diretamente"
+              + (f" e **{plural(p['indiretos'], 'pessoa')}** indiretamente, "
+                 f"somando {p['total']}." if p["indiretos"] else
+                 " — nenhum indireto: o time todo é de executores.")
               + (f"  \nReporta a: **{p['gestor']}** (L{n-1})" if p["gestor"] else
                  "  \nTopo da estrutura — não reporta a ninguém na planilha."))
             A("")
