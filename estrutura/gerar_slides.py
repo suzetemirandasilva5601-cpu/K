@@ -140,69 +140,7 @@ def curto(nome, n=2):
     return " ".join(p[:n])
 
 
-def levantar():
-    fac = ler_factorial()
-    todos, filhos, ceo = montar(fac, aplicar_draft=True)
-    idx = {p["nome"]: p for p in todos}
-
-    vagas = ler_aba("Vagas 21-10.xlsx", "Vagas", "CARGO")
-    for v in vagas:
-        v["preenchida"] = (bool(v.get("CONTRATADO"))
-                           or str(v.get("STATUS GUPY")) == "FECHADA"
-                           or str(v.get("Admissão") or "")[:10] == "2026-10-01")
-        v["nivel"] = nivel(str(v["CARGO"]))
-        v["publicada"] = str(v.get("STATUS GUPY")) == "ABERTA | PUBLICADA"
-        v["geo"] = geografia(str(v["CARGO"]))
-        v["bloco_ops"], v["local"] = bloco_ops(str(v["CARGO"]))
-        rot, head = BLOCO[str(v["ARÉA"])]
-        v["bloco"], v["head"] = rot, head
-    ab = [v for v in vagas if not v["preenchida"]]
-
-    def l3_de(nome):
-        p = idx.get(nome)
-        while p and p["level"] > 3:
-            p = idx.get(p["gestor"])
-        return p["nome"] if p else "Raioni De Oliveira Santos"
-
-    def gestores_em(nome):
-        n = 1 if idx[nome]["diretos"] else 0
-        pilha = list(filhos[nome])
-        while pilha:
-            x = pilha.pop()
-            n += 1 if x["diretos"] else 0
-            pilha.extend(filhos[x["nome"]])
-        return n
-
-    # vagas por L3 e por bloco do organograma
-    por_l3, por_bloco = Counter(), {}
-    for v in ab:
-        l3 = l3_de(v["head"]) if v["head"] else "Raioni De Oliveira Santos"
-        por_l3[l3] += 1
-        b = por_bloco.setdefault(v["bloco"], {"head": v["head"], "l3": l3,
-                                              "vagas": 0, "abrir": 0, "lid": 0})
-        b["vagas"] += 1
-        b["abrir"] += 0 if v["publicada"] else 1
-        b["lid"] += 1 if v["nivel"] in ("Head", "Team Leader") else 0
-    for rot, b in por_bloco.items():
-        p = idx.get(b["head"])
-        b["ativos"] = (p["total"] + 1) if p else 0
-        b["gestores"] = gestores_em(b["head"]) if p else 0
-        b["pct"] = b["vagas"] / (b["ativos"] + b["vagas"]) if b["ativos"] else None
-
-    diretorias = []
-    for l3 in sorted(filhos[ceo], key=lambda p: -p["total"]):
-        diretorias.append({
-            "nome": l3["nome"], "sigla": SIGLA.get(l3["nome"], "L3"),
-            "ativos": l3["total"] + 1, "gestores": gestores_em(l3["nome"]),
-            "vagas": por_l3[l3["nome"]],
-            "blocos": sorted([(r, b) for r, b in por_bloco.items()
-                              if b["l3"] == l3["nome"]], key=lambda kv: -kv[1]["vagas"]),
-        })
-
-    ops = [v for v in ab if v["bloco_ops"]]
-    return {"todos": todos, "filhos": filhos, "ceo": ceo, "idx": idx,
-            "vagas": vagas, "ab": ab, "ops": ops, "por_bloco": por_bloco,
-            "diretorias": diretorias}
+from gestores_por_level import levantar  # mesma base da planilha
 
 
 # ------------------------------------------------------------------ helpers
@@ -314,6 +252,16 @@ def tabela(s, l, t, w, h, cabec, linhas, larguras, tam=9, cor_cab=AZUL,
     return tb
 
 
+def kpis(s, itens, t=155):
+    """Cinco números grandes com legenda, na geometria do template."""
+    pos = [(36, 220), (268, 220), (501, 220), (733, 220), (965, 249)]
+    for (l, w), (num, leg, cor) in zip(pos, itens):
+        txt(s, l, t, w, 49, num, tam=26, cor=cor, bold=True,
+            alinha=PP_ALIGN.CENTER)
+        txt(s, l, t + 46, w, 40, leg, tam=8.5, cor=TEXTO,
+            alinha=PP_ALIGN.CENTER)
+
+
 def cabecalho(s, kicker, takeaway, descricao):
     ph = {x.placeholder_format.idx: x for x in s.placeholders}
     ph[10].text_frame.text = kicker
@@ -348,274 +296,169 @@ def mover_para(prs, de, para):
 # ------------------------------------------------------------------ slide 1
 def slide_estrutura(prs, lay, d):
     s = prs.slides.add_slide(lay)
-    ab, dirs = d["ab"], d["diretorias"]
-    ativos = sum(x["ativos"] for x in dirs) + 1
-    gestores = sum(x["gestores"] for x in dirs) + 1
-    abrir = sum(1 for v in ab if not v["publicada"])
+    dirs, ab, todos = d["diretorias"], d["ab"], d["todos"]
+    ativos = sum(f["ativos"] for f in dirs) + 1
+    gest = sum(f["gestores"] for f in dirs) + 1
+    niveis = max(p["level"] for p in todos) - 1
+    chefia = [v for v in ab if v["nivel"] in ("Head", "Team Leader")]
+    maior = max(todos, key=lambda p: p["diretos"])
+    dens = {f["sigla"]: f["ativos"] / f["gestores"] for f in dirs}
+    dmin, dmax = min(dens.values()), max(dens.values())
+    mais = max(dirs, key=lambda f: f["ativos"] / f["gestores"])
+    menos = min(dirs, key=lambda f: f["ativos"] / f["gestores"])
+    ops = max(dirs, key=lambda f: f["ativos"])
 
     cabecalho(
         s,
-        "Estrutura hierárquica e onde falta gente",
-        f"A casa tem {ativos} pessoas e {gestores} gestores em 7 níveis; as "
-        f"{len(ab)} vagas em aberto se concentram em Operações, e {abrir} delas "
-        "ainda não têm processo aberto no Gupy",
-        "Cada caixa é um reporte direto do CEO, com o quadro ativo, quantos "
-        "lideram alguém e quantas vagas estão em aberto. Abaixo, os blocos de "
-        "Operações.")
+        "Estrutura de liderança",
+        f"São {gest} gestores para {ativos} pessoas em {niveis} níveis, mas a "
+        f"densidade varia de {dmin:.1f} a {dmax:.1f} pessoas por gestor entre as "
+        f"diretorias, e {len(chefia)} posições de chefia estão em aberto"
+        .replace(".", ","),
+        "Quadro ativo, quantos lideram alguém e quantas vagas de chefia há em cada "
+        "reporte direto do CEO. Gestor = quem tem pelo menos um liderado direto.")
 
-    # topo
-    cx(s, 476, 152, 328, 42,
-       ["Co-CEO · Jose Luiz Belixior",
-        f"{ativos} pessoas · {gestores} gestores · {len(ab)} vagas em aberto"],
-       fundo=AZUL, tam=11, tam2=8.5)
-    linha(s, 640, 194, 640, 206)
-    linha(s, 62, 206, 1218, 206)
+    kpis(s, [
+        ([f"{ativos}"], ["pessoas no organograma", "de out/26"], AZUL),
+        ([f"{gest}"], ["gestores",
+                       f"1 para cada {(ativos-gest)/gest:.1f}".replace(".", ",")
+                       + " executores"], AZUL),
+        ([f"{niveis}"], ["níveis do CEO ao", "analista mais fundo"], AZUL),
+        ([f"{maior['diretos']}"], ["liderados diretos no maior",
+                                   "time, contra média de 5,1"], LARANJA),
+        ([f"{len(chefia)}"], ["vagas de chefia em aberto",
+                              f"{sum(1 for v in chefia if not v['publicada'])} "
+                              "sem processo"], LARANJA),
+    ])
 
-    # diretorias
-    larg, passo = 142, 152
-    x0 = 36
-    for i, f in enumerate(dirs):
-        x = x0 + i * passo
-        linha(s, x + larg / 2, 206, x + larg / 2, 216)
-        tem = f["vagas"] > 0
-        cx(s, x, 216, larg, 60,
-           [f["sigla"], curto(f["nome"]),
-            f"{f['ativos']} ativos · {f['gestores']} gest."],
-           fundo=VERDE if tem else CINZA, tam=9, tam2=7.5)
-        cx(s, x, 280, larg, 22,
-           f"{f['vagas']} vaga" + ("s" if f["vagas"] != 1 else "") + " em aberto",
-           fundo=LARANJA if tem else FUNDO_CINZA,
-           cor=BRANCO if tem else CINZA_TXT, tam=8.5)
-
-    # blocos de Operacoes
-    coo = next(f for f in dirs if f["sigla"] == "COO")
-    ix = [i for i, f in enumerate(dirs) if f["sigla"] == "COO"][0]
-    xc = x0 + ix * passo + larg / 2
-    linha(s, xc, 302, xc, 318)
-    cx(s, 36, 318, 236, 26, "Dentro de Operações (COO)", fundo=AZUL, tam=9.5)
-    blocos = coo["blocos"] + [("Demais blocos sem vaga", None)]
-    bl_larg, bl_passo = 148, 156
-    for i, (rot, b) in enumerate(blocos):
-        x = 284 + i * bl_passo
-        if b is None:
-            cx(s, x, 318, bl_larg, 26, "2 blocos sem vaga", fundo=FUNDO_CINZA,
-               cor=CINZA_TXT, tam=8.5, bold=False)
-            continue
-        cx(s, x, 318, bl_larg, 26,
-           f"{rot} · {b['vagas']}", fundo=VERDE_ATY, cor=RGBColor(0, 0x40, 0x33),
-           tam=8.5)
-
-    # tabela: heads com vaga
     linhas, destaques = [], []
-    todos_blocos = sorted(d["por_bloco"].items(), key=lambda kv: -kv[1]["vagas"])
-    for i, (rot, b) in enumerate(todos_blocos):
-        if b["pct"] is not None and b["pct"] >= 0.5:
+    for i, f in enumerate(dirs):
+        dens = f["ativos"] / f["gestores"]
+        if dens >= 8 or dens <= 2.5:
             destaques.append(i)
-        sg = SIGLA.get(b["l3"], "—")
-        linhas.append([rot, CURTO_CL.get(sg, "CEO"),
-                       curto(b["head"], 3) if b["head"] else "— sem bloco",
-                       b["ativos"] or "—", b["gestores"] or "—", b["vagas"],
-                       b["abrir"], b["lid"] or "—",
-                       f"{b['pct']*100:.0f}%" if b["pct"] is not None else "—"])
-    linhas.append(["Total dos blocos", "", "",
-                   sum(b["ativos"] for _, b in todos_blocos),
-                   sum(b["gestores"] for _, b in todos_blocos), len(ab), abrir,
-                   sum(b["lid"] for _, b in todos_blocos), ""])
-    tabela(s, 36, 356, 1208, 268,
-           ["Bloco", "C-level", "Head responsável", "Ativos", "Gestores",
-            "Vagas em aberto", "Ainda a abrir", "Vagas de chefia",
-            "% do quadro em aberto"],
-           linhas, [196, 82, 200, 76, 86, 128, 110, 116, 214], tam=8,
+        linhas.append([f["sigla"], curto(f["nome"], 3), f["ativos"], f["gestores"],
+                       f"{dens:.1f}".replace(".", ","), f["niveis"], f["vagas"],
+                       f["chefia"] or "—"])
+    linhas.append(["TOTAL", "DMS", ativos, gest,
+                   f"{ativos/gest:.1f}".replace(".", ","), niveis, len(ab),
+                   len(chefia)])
+    tabela(s, 36, 262, 1208, 262,
+           ["Diretoria", "Responsável", "Ativos", "Gestores",
+            "Pessoas por gestor", "Níveis", "Vagas em aberto",
+            "Vagas de chefia"],
+           linhas, [150, 254, 110, 120, 174, 100, 150, 150], tam=9,
            destaques=tuple(destaques))
 
-    cx(s, 36, 630, 1208, 24,
-       ["Healthcare é o único bloco com mais vaga que gente: 4 vagas para 3 "
-        "pessoas. Air Operations concentra 19 das 49, mas são 18% do próprio "
-        "quadro. Ativos do organograma de out/26; a base de setembro tem 311 "
-        "ativos porque 23 admissões entraram depois do fechamento."],
-       fundo=FUNDO_VERDE, borda=VERDE, cor=TEXTO, tam=8, bold=False,
-       alinha=PP_ALIGN.LEFT, margem=8)
+    cx(s, 36, 536, 1208, 26, "O que a densidade mostra", fundo=VERDE, tam=10.5)
+    cx(s, 36, 566, 1208, 86,
+       [f"• {mais['sigla']} tem {dmax:.1f} pessoas por gestor, quase o dobro da "
+        f"média de {ativos/gest:.1f}, e é onde está o maior time da casa: "
+        f"{maior['diretos']} reportes diretos no {maior['cargo']}."
+        .replace(".", ",", 2),
+        f"• {menos['sigla']} tem {dmin:.1f} pessoas por gestor: "
+        f"{menos['gestores']} gestores para {menos['ativos']} pessoas, com quatro "
+        "Heads de indústria liderando 2 pessoas ou menos.".replace(".", ",", 1),
+        f"• {ops['sigla']} concentra {ops['ativos']} das {ativos} pessoas e "
+        f"{ops['niveis']} níveis, a única diretoria que desce até o L8; "
+        "as outras param no L5 ou L6."],
+       fundo=FUNDO_VERDE, borda=VERDE, cor=TEXTO, tam=9, bold=False,
+       alinha=PP_ALIGN.LEFT, margem=10)
     return s
 
 
 # ------------------------------------------------------------------ slide 2
 def slide_vagas(prs, lay, d):
     s = prs.slides.add_slide(lay)
-    ab, ops = d["ab"], d["ops"]
-    coo = [v for v in ab if v["C-LEVEL"] == "COO"]
-    pub_ops = sum(1 for v in ops if v["publicada"])
-    abrir_ops = len(ops) - pub_ops
-    geo = Counter(v["geo"] for v in ab)
+    todos, ab, filhos = d["todos"], d["ab"], d["filhos"]
+    solo = [p for p in todos if p["diretos"] == 1]
+    CH = ("team leader", "head", "manager", "coordinator")
+    sem = [p for p in todos if any(k in p["cargo"].lower() for k in CH)
+           and p["diretos"] == 0]
+    chefia = [v for v in ab if v["nivel"] in ("Head", "Team Leader")]
+    a_abrir = [v for v in chefia if not v["publicada"]]
 
     cabecalho(
         s,
-        "Vagas em aberto, do total ao que trava",
-        f"Das {len(ab)} vagas em aberto, {len(coo)} estão sob o COO e {len(ops)} "
-        f"nos blocos de Operações; dessas, só {pub_ops} estão publicadas e "
-        f"{abrir_ops} ainda precisam ser abertas",
-        "Funil das vagas, abertura por geografia e situação de cada bloco de "
-        "Operações. “Em aberto” na planilha não quer dizer processo rodando.")
+        "Onde a liderança trava",
+        f"{len(sem)} pessoas têm título de chefia sem nenhum liderado, "
+        f"{len(solo)} gestores lideram uma única pessoa e quatro Team Leaders "
+        "lideram outros Team Leaders com o título idêntico",
+        "Camada de liderança: onde ela está duplicada, onde está vazia e onde "
+        "falta contratar. Nenhum desses pontos aparece no deck de vagas.")
 
-    # funil
-    cx(s, 36, 155, 268, 26, "Funil das vagas", fundo=AZUL, tam=10.5)
-    etapas = [(f"{len(d['vagas'])}", "registros na planilha", CINZA),
-              (f"{len(ab)}", "realmente em aberto", AZUL),
-              (f"{len(coo)}", "sob o COO", AZUL),
-              (f"{len(ops)}", "nos blocos de Operações", VERDE),
-              (f"{pub_ops}", "publicadas no Gupy", VERDE),
-              (f"{abrir_ops}", "ainda a abrir", LARANJA)]
-    y = 189
-    for num, rot, cor in etapas:
-        cx(s, 36, y, 70, 32, num, fundo=cor, tam=14)
-        txt(s, 114, y + 8, 190, 20, rot, tam=9, cor=TEXTO)
-        y += 37
-
-    # geografia
-    cx(s, 324, 155, 268, 26, "Abertura por geografia", fundo=AZUL, tam=10.5)
-    y = 189
-    for g, n in [("Brasil / geral", geo["Brasil/geral"]), ("EUA", geo["EUA"]),
-                 ("Europa", geo["Europa"])]:
-        cx(s, 324, y, 268, 30,
-           f"{g}: {n} vagas  ·  {n/len(ab)*100:.0f}%", fundo=FUNDO_AZUL,
-           borda=AZUL, cor=TEXTO, tam=9.5, alinha=PP_ALIGN.LEFT, margem=10)
-        y += 36
-    txt(s, 324, y + 2, 268, 90,
-        ["Nos EUA não há nenhuma reposição: as 9 vagas são aumento de quadro.",
-         "Na Europa, 2 das 6 são reposição.",
-         "Pelo campo Ocupante/Vaga: 30 aumento de quadro e 19 substituição."],
-        tam=8.5, cor=CINZA_TXT, espaco=3)
-
-    # pontos de atencao
-    cx(s, 612, 155, 632, 26, "Onde falta chefe e onde falta gente",
-       fundo=LARANJA, tam=10.5)
-    cx(s, 612, 187, 632, 192,
-       ["• Inland Freight Europa: 4 ativos, 4 vagas, 50% do quadro em aberto e "
-        "nenhum team leader no bloco",
-        "• Operações America: 46% em aberto e 3 vagas de team leader, todas "
-        "ainda a abrir",
-        "• As 7 vagas de chefia da casa: 1 Head (Overland Europa, a única "
-        "publicada) e 6 Team Leaders",
-        "• Exportação carrega ~81 embarques por ativo, o maior da operação, "
-        "com 3 pessoas",
-        "• Warehouses (MIA, Houston e NY): 5 pessoas e nenhuma vaga aberta"],
-       fundo=FUNDO_LARANJA, borda=LARANJA, cor=TEXTO, tam=9, bold=False,
-       alinha=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, margem=9)
-
-    cx(s, 612, 389, 632, 26, "As 17 vagas de Operações por nível",
-       fundo=VERDE, tam=10.5)
-    niv = Counter(v["nivel"] for v in ops)
-    txt(s, 616, 421, 624, 22,
-        f"Team Leader {niv['Team Leader']}   ·   Specialist {niv['Specialist']}"
-        f"   ·   Analyst {niv['Analyst']}", tam=10, cor=TEXTO, bold=True)
-
-    # tabela por local
-    linhas, destaques = [], []
-    por_bloco = {}
-    for v in ops:
-        b = por_bloco.setdefault(v["bloco_ops"], {"v": 0, "a": 0, "loc": v["local"]})
-        b["v"] += 1
-        b["a"] += 0 if v["publicada"] else 1
-    i = 0
-    for local in ("EUA", "Europa", "Brasil"):
-        blocos = [(r, b) for r, b in OPS_DECK.items() if b[1] == local]
-        at_loc = sum(b[0] for _, b in blocos)
-        vg_loc = sum(por_bloco.get(r, {"v": 0})["v"] for r, _ in blocos)
-        ab_loc = sum(por_bloco.get(r, {"a": 0})["a"] for r, _ in blocos)
-        emb, por = EMB_LOCAL[local]
-        linhas.append([local, at_loc, vg_loc, ab_loc,
-                       f"{vg_loc/(at_loc+vg_loc)*100:.1f}%".replace(".", ","),
-                       emb, por])
-        i += 1
-        for rot, (at, _) in sorted(blocos, key=lambda kv: -kv[1][0]):
-            b = por_bloco.get(rot, {"v": 0, "a": 0})
-            pct = b["v"] / (at + b["v"]) * 100
-            if pct >= 40:
-                destaques.append(i)
-            linhas.append([f"      {rot}", at, b["v"], b["a"],
-                           f"{pct:.1f}%".replace(".", ","), "", ""])
-            i += 1
-    at_t = sum(b[0] for b in OPS_DECK.values())
-    linhas.append(["Total Operações", at_t, len(ops), abrir_ops,
-                   f"{len(ops)/(at_t+len(ops))*100:.1f}%".replace(".", ","),
-                   "~4.032", 52])
-    tabela(s, 36, 452, 1208, 178,
-           ["Local · bloco", "Ativos", "Vagas em aberto", "Ainda a abrir",
-            "% em aberto", "Embarques/mês", "Emb./ativo"],
-           linhas, [392, 112, 150, 130, 134, 160, 130], tam=8,
-           destaques=tuple(destaques))
-
-    cx(s, 36, 636, 1208, 20,
-       ["As 12 vagas ainda a abrir estão todas em EUA e Europa, justamente os dois "
-        "blocos mais vazios: o gargalo é a abertura interna, não o mercado."],
-       fundo=FUNDO_VERDE, borda=VERDE, cor=TEXTO, tam=8.5, bold=False,
-       alinha=PP_ALIGN.LEFT, margem=8)
-    return s
-
-
-def conferencia(d):
-    """Confere os numeros do deck corrigido (2) contra as planilhas."""
-    ab, ops, vagas = d["ab"], d["ops"], d["vagas"]
-    coo = [v for v in ab if v["C-LEVEL"] == "COO"]
-    base = ler_aba("Base_Setembro26 (1).xlsx", "Setembro Unificado", "NOME")
-    at = [b for b in base if b["SITUAÇÃO"] == "ATIVO"]
-    num = lambda x: float(x) if isinstance(x, (int, float)) else 0.0
-    geo = Counter(v["geo"] for v in ab)
-    niv = Counter(v["nivel"] for v in coo)
-    checks = [
-        ("registros na planilha de vagas", 65, len(vagas)),
-        ("vagas realmente em aberto", 49, len(ab)),
-        ("já preenchidas", 13, sum(1 for v in vagas
-                                   if str(v.get("STATUS GUPY")) == "FECHADA")),
-        ("a confirmar", 3, sum(1 for v in vagas if v["preenchida"]
-                               and str(v.get("STATUS GUPY")) != "FECHADA")),
-        ("vagas sob o COO", 35, len(coo)),
-        ("vagas do CCO", 5, sum(1 for v in ab if v["C-LEVEL"] == "CCO")),
-        ("vagas do Co-CEO", 4, sum(1 for v in ab if v["C-LEVEL"] == "Co-CEO")),
-        ("vagas do CFSO", 3, sum(1 for v in ab if v["C-LEVEL"] == "CFSO")),
-        ("vagas do CITO", 2, sum(1 for v in ab if v["C-LEVEL"] == "CITO")),
-        ("Air Operations", 19, sum(1 for v in coo
-                                   if str(v["ARÉA"]) == "Air Operations")),
-        ("Air Product", 7, sum(1 for v in coo if str(v["ARÉA"]) == "Air Product")),
-        ("COO publicadas", 6, sum(1 for v in coo if v["publicada"])),
-        ("COO Analyst + Specialist", 26, niv["Analyst"] + niv["Specialist"]),
-        ("nos blocos de Operações", 17, len(ops)),
-        ("dessas, publicadas", 5, sum(1 for v in ops if v["publicada"])),
-        ("dessas, a abrir", 12, sum(1 for v in ops if not v["publicada"])),
-        ("geografia Brasil/geral", 34, geo["Brasil/geral"]),
-        ("geografia EUA", 9, geo["EUA"]),
-        ("geografia Europa", 6, geo["Europa"]),
-        ("Colchão entre as 49", 1, sum(1 for v in ab
-                                       if v["Folha/Colchão"] == "Colchão")),
-        ("Aumento de Quadro", 30, sum(1 for v in ab if str(v.get("Ocupante/Vaga"))
-                                      == "Aumento de Quadro")),
-        ("Vaga Substituição", 19, sum(1 for v in ab if str(v.get("Ocupante/Vaga"))
-                                      == "Vaga Substituição")),
-        ("ativos na base de setembro", 311, len(at)),
-        ("COO na base de setembro", 193, sum(1 for b in at
-                                             if str(b.get("C-LEVEL")) == "COO")),
-        ("ativos sob Carol Mendoza", 78, sum(1 for b in at if "MENDOZA"
-                                             in str(b.get("HEAD", "")).upper())),
-        ("custo total set/26 (R$ mil)", 4283,
-         round(sum(num(b.get("TOTAL R$")) for b in at) / 1000)),
-        ("custo Air Operations (R$ mil)", 1046,
-         round(sum(num(b.get("TOTAL R$")) for b in at
-                   if str(b.get("AREA")) == "AIR OPERATIONS") / 1000)),
+    pos = [(36, 289), (345, 289), (654, 289), (963, 251)]
+    titulos = ["1. Título de chefia sem time",
+               "2. Camada que não se paga",
+               "3. Team Leader liderando Team Leader",
+               "4. Chefia a contratar"]
+    cores = [LARANJA, LARANJA, LARANJA, AZUL]
+    fundos = [FUNDO_LARANJA, FUNDO_LARANJA, FUNDO_LARANJA, FUNDO_AZUL]
+    conteudo = [
+        [f"{len(sem)} pessoas com cargo de Head, Manager ou Team Leader e "
+         "zero liderados",
+         "2 são Heads: Revenue Management e um BD Manager",
+         "Magno Bezerra (Airport Operations Manager) é um deles — e o draft "
+         "risca a caixa dele",
+         "Decisão: o título reflete a função ou precisa ser revisto?"],
+        [f"{len(solo)} gestores lideram uma única pessoa",
+         "Yuri Torreao (Head of Energy) e Cristiane Giovanelli (Total Rewards TL) "
+         "entre eles",
+         "Cada um custa um nível inteiro de hierarquia para coordenar 1 pessoa",
+         "Decisão: juntar os times ou assumir a carteira direto?"],
+        ["Gabriella Pereira e Pamela Ibarra lideram 4 Team Leaders com o mesmo "
+         "título de *Air Freight Operations Team Leader*",
+         "São 4 camadas de TL dentro de Operações Aéreo",
+         "O draft risca com X exatamente a Gabriella e a Pamela",
+         "Decisão: qual é a senioridade real de cada camada?"],
+        [f"{len(chefia)} vagas de chefia em aberto",
+         f"{len(a_abrir)} sem processo iniciado",
+         "A única publicada é o Overland Head (Europa)",
+         "3 das 7 estão em Air Product",
+         "Inland Freight Europa segue sem TL"],
     ]
-    print("\nCONFERÊNCIA — deck corrigido (2) × planilhas")
-    print(f"  {'item':<34}{'deck':>8}{'planilha':>10}   ok?")
-    ruins = 0
-    for rot, esperado, achado in checks:
-        ok = esperado == achado
-        ruins += 0 if ok else 1
-        print(f"  {rot:<34}{esperado:>8}{achado:>10}   {'OK' if ok else '<<< DIVERGE'}")
-    print(f"  -> {len(checks)-ruins} de {len(checks)} conferem")
-    return ruins
+    for (l, w), tit, cor, fundo, bullets in zip(pos, titulos, cores, fundos,
+                                                conteudo):
+        cx(s, l, 155, w, 28, tit, fundo=cor, tam=10.5)
+        cx(s, l, 187, w, 180, ["• " + b.replace("*", "") for b in bullets],
+           fundo=fundo, borda=cor, cor=TEXTO, tam=8.5, bold=False,
+           alinha=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, margem=9)
+
+    linhas = [
+        ["Maior time da casa", "Victor Telles Gonzaga · Head of Operation",
+         "L4 · Tecnologia", "27 diretos, 37 pessoas",
+         "Quebrar em camadas ou manter?"],
+        ["TL sobre TL", "Gabriella Pereira e Pamela Ibarra",
+         "L6 · Operações Aéreo", "4 TLs de título idêntico abaixo",
+         "Definir a senioridade de cada camada"],
+        ["Gestor de uma pessoa", f"{len(solo)} gestores, de L4 a L7",
+         "5 diretorias", "1 liderado cada",
+         "Juntar times ou assumir carteira"],
+        ["Título sem time", f"{len(sem)} pessoas", "L4 a L6", "0 liderados",
+         "Revisar cargo ou atribuir equipe"],
+        ["Bloco sem liderança", "Inland Freight Europa", "Operações Aéreo",
+         "4 pessoas, 4 vagas, nenhum TL", "Abrir a vaga de TL da Europa"],
+        ["Chefia a contratar", f"{len(chefia)} vagas", "4 diretorias",
+         f"{len(a_abrir)} sem processo", "Pré-aprovar faixa e budget"],
+    ]
+    cx(s, 36, 378, 1208, 26, "O que precisa de decisão", fundo=VERDE, tam=10.5)
+    tabela(s, 36, 408, 1208, 164,
+           ["Ponto", "Quem", "Onde", "Hoje", "Decisão pedida"],
+           linhas, [210, 316, 200, 250, 232], tam=8.5)
+
+    cx(s, 36, 584, 1208, 68,
+       ["• O deck de vagas mostra quantas pessoas faltam. Este mostra que, mesmo "
+        "com o quadro cheio, a camada de liderança não está resolvida: 12 posições "
+        "de chefia hoje não correspondem à função.",
+        "• As três caixas que o draft risca com X (Magno Bezerra, Gabriella "
+        "Pereira e Pamela Ibarra) são justamente pontos desta lista — a "
+        "reorganização já começou no papel, só não está escrita."],
+       fundo=FUNDO_VERDE, borda=VERDE, cor=TEXTO, tam=9, bold=False,
+       alinha=PP_ALIGN.LEFT, margem=10)
+    return s
 
 
 def main():
     d = levantar()
-    ruins = conferencia(d)
-
     prs = Presentation(TEMPLATE)
     lay = [l for l in prs.slide_masters[1].slide_layouts
            if l.name == "DMS_Conteudo"][0]
@@ -623,16 +466,15 @@ def main():
     for sh in prs.slides[0].shapes:
         if sh.has_text_frame and "Projeto Diligenciamento" in sh.text_frame.text:
             runs = [r for p in sh.text_frame.paragraphs for r in p.runs]
-            runs[1].text = "Estrutura hierárquica x vagas em aberto"
+            runs[1].text = "Estrutura hierárquica e camada de liderança"
 
     slide_estrutura(prs, lay, d)
     slide_vagas(prs, lay, d)
     mover_para(prs, 2, 1)
     mover_para(prs, 3, 2)
     prs.save(SAIDA)
-
-    print(f"\ntemplate ATY (verde): {os.path.basename(TEMPLATE)}")
-    print(f"slides: {len(prs.slides)} | divergências: {ruins}")
+    print(f"template ATY (verde): {os.path.basename(TEMPLATE)}")
+    print(f"slides: {len(prs.slides)}")
     print("ok ->", SAIDA)
 
 

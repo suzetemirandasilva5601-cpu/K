@@ -1,254 +1,364 @@
 #!/usr/bin/env python3
 """
-Gera a visao de gestores por level e a aba de divergencias.
+Consolida numa planilha unica e enxuta a estrutura de gestores da DMS,
+integrando o que havia nas duas versoes anteriores ('Gestores_por_Level (1)'
+e a versao com cross-check) e cruzando com a planilha de vagas.
 
 Saidas:
-  estrutura/Gestores_por_Level.md     - um bloco por level, quem administra quem
-  estrutura/Gestores_por_Level.xlsx   - abas anteriores + aba 'Divergencias'
+  estrutura/Gestores_por_Level.xlsx   5 abas: Resumo, Gestores, Estrutura,
+                                      Vagas por bloco, Divergencias
+  estrutura/Gestores_por_Level.md     leitura em texto, por level
+
+Simplificacoes em relacao as versoes anteriores:
+  - uma aba 'Gestores' com filtro de level substitui as 6 abas 'Lx gestores'
+  - 'Estrutura' com 8 colunas em vez de 15
+  - 'Divergencias' traz so o que divergiu; quem casou nas duas bases sai
+  - cargos do L2/L3 ja preenchidos com o que foi lido no draft
 
 Uso:  python3 estrutura/gestores_por_level.py
 """
 import os
-from collections import defaultdict
+import re
+from collections import Counter, defaultdict
 
 import openpyxl
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from cross_check import (toks, CARGOS_DRAFT, C_LEVEL_DRE, DRAFT_LIDERADOS,
-                         MOVIDOS_PARA_CEO, NOTAS_DRAFT, PAT_INTERN, RAIZ,
-                         RISCADOS, SEM_CARGO, TESTE, confere_draft,
-                         diretoria_de, divergencias, ler_aba, ler_factorial,
-                         montar)
+from cross_check import (CARGOS_DRAFT, C_LEVEL_DRE, MOVIDOS_PARA_CEO, RAIZ,
+                         RISCADOS, SEM_CARGO, diretoria_de, divergencias,
+                         ler_aba, ler_factorial, montar)
 
 SAIDA = os.path.join(RAIZ, "estrutura")
+CHEFIA = ("team leader", "head", "manager", "coordinator")
+SIGLA = {
+    "Raioni De Oliveira Santos": "COO",
+    "Cleyton Cardoso Esteves": "CITO",
+    "Ana Carolina Botelho Caldeira Vasconcellos": "CFSO",
+    "Andre Lemos Tavares": "CCO",
+    "Carolina Karnakis de Nobrega": "Head of Talent",
+    "Luis Fernando Santos Muniz": "Head of Services",
+    "Filipe Teixeira Sampaio": "Head of Air Product",
+    "Filipe Carneiro De Oliveira": "Head of Ocean Product",
+}
+# area da planilha de vagas -> head do bloco no organograma
+BLOCO = {
+    "Air Operations": "Carolina Bento Mendoza",
+    "Air Product": "Filipe Teixeira Sampaio",
+    "Ocean Operations": "Natalia Correia Da Costa Parreira",
+    "Ocean Product": "Filipe Carneiro De Oliveira",
+    "Quality & Operational Intelligence": "Marco Antonio Maraia Villa",
+    "Overland (Europa)": "Possidonio Dantas de Almeida Neto",
+    "Services": "Luis Fernando Santos Muniz",
+    "Special Operations": None,
+    "Healthcare": "Jose Carlos Duarte Freitas Sobrinho",
+    "High-Tech": "Ricardo Tebexreni Jakowatz",
+    "Automotive": "Ricardo Tebexreni Jakowatz",
+    "Financial": "Ana Carolina Botelho Caldeira Vasconcellos",
+    "Technology": "Cleyton Cardoso Esteves",
+    "Talent Management Team": "Carolina Karnakis de Nobrega",
+}
+NIVEIS = [("HEAD", "Head"), ("TL", "Team Leader"), ("SPEC", "Specialist"),
+          ("ANALYST", "Analyst"), ("ASSIST", "Assistant"), ("INTERN", "Intern"),
+          ("APPRENTICE", "Aprendiz")]
+
+AZUL = "1B3A5C"
+VERDE = "009796"
+LARANJA = "FF8E2E"
+COR_LEVEL = {2: "0D1F31", 3: "1B3A5C", 4: "2E6CA4", 5: "67A3D9",
+             6: "AED2F0", 7: "DFEAF5", 8: "F4F8FC"}
 
 
-def plural(n, s, p=None):
-    return f"{n} {s}" if n == 1 else f"{n} {p or s + 's'}"
+def nivel_vaga(c):
+    for k, r in NIVEIS:
+        if re.search(rf"\b{k}\b", c.upper()):
+            return r
+    return "Outro"
 
 
 def cargo_de(p):
-    """Cargo da planilha; para L2/L3 usa o cargo lido no draft."""
     if p["nome"] in CARGOS_DRAFT:
         cargo, slide = CARGOS_DRAFT[p["nome"]]
         return cargo, f"draft {slide}"
     return (p["cargo"], "planilha") if p["cargo"] else (SEM_CARGO, "—")
 
 
-def confere(p, como_esta):
-    """Texto de conferencia contra o numero de liderados impresso no draft."""
-    d = DRAFT_LIDERADOS.get(p["nome"])
-    if not d:
-        return "não consta no draft"
-    base = como_esta.get(p["nome"], p["total"])
-    if d[0] == base:
-        return f"confere ({d[1]})"
-    return f"draft {d[0]}, planilha {base} (+{base - d[0]} admitido depois)"
+def levantar():
+    fac = ler_factorial()
+    todos, filhos, ceo = montar(fac, aplicar_draft=True)
+    idx = {p["nome"]: p for p in todos}
+    area = diretoria_de(todos, filhos, ceo)
+
+    vagas = ler_aba("Vagas 21-10.xlsx", "Vagas", "CARGO")
+    for v in vagas:
+        v["preenchida"] = (bool(v.get("CONTRATADO"))
+                           or str(v.get("STATUS GUPY")) == "FECHADA"
+                           or str(v.get("Admissão") or "")[:10] == "2026-10-01")
+        v["nivel"] = nivel_vaga(str(v["CARGO"]))
+        v["publicada"] = str(v.get("STATUS GUPY")) == "ABERTA | PUBLICADA"
+        v["head"] = BLOCO[str(v["ARÉA"])]
+    ab = [v for v in vagas if not v["preenchida"]]
+
+    def l3_de(nome):
+        p = idx.get(nome)
+        while p and p["level"] > 3:
+            p = idx.get(p["gestor"])
+        return p["nome"] if p else "Raioni De Oliveira Santos"
+
+    def gestores_em(nome):
+        n = 1 if idx[nome]["diretos"] else 0
+        pilha = list(filhos[nome])
+        while pilha:
+            x = pilha.pop()
+            n += 1 if x["diretos"] else 0
+            pilha.extend(filhos[x["nome"]])
+        return n
+
+    por_l3 = defaultdict(lambda: {"vagas": 0, "chefia": 0})
+    for v in ab:
+        l3 = l3_de(v["head"]) if v["head"] else "Raioni De Oliveira Santos"
+        por_l3[l3]["vagas"] += 1
+        por_l3[l3]["chefia"] += 1 if v["nivel"] in ("Head", "Team Leader") else 0
+
+    diretorias = []
+    for l3 in sorted(filhos[ceo], key=lambda p: -p["total"]):
+        # diretoria_de ja inclui o proprio L3; nao somar de novo
+        sub = [p for p in todos if area.get(p["nome"]) == l3["nome"]]
+        diretorias.append({
+            "nome": l3["nome"], "sigla": SIGLA.get(l3["nome"], "L3"),
+            "ativos": len(sub), "gestores": gestores_em(l3["nome"]),
+            "niveis": max(p["level"] for p in sub) - l3["level"] + 1,
+            "vagas": por_l3[l3["nome"]]["vagas"],
+            "chefia": por_l3[l3["nome"]]["chefia"],
+        })
+
+    base = ler_aba("Base_Setembro26 (1).xlsx", "Setembro Unificado", "NOME")
+    dre = ler_aba("Baseline DRE 26.2.xlsx", "Baseline ativos agosto", "Colaborador")
+    return {"todos": todos, "filhos": filhos, "ceo": ceo, "idx": idx,
+            "area": area, "vagas": vagas, "ab": ab, "diretorias": diretorias,
+            "div": divergencias(todos, base, dre), "gestores_em": gestores_em,
+            "l3_de": l3_de}
+
+
+# ------------------------------------------------------------------ excel
+def estilo(wb, abas_level=()):
+    for ws in wb.worksheets:
+        for c in ws[1]:
+            c.fill = PatternFill("solid", fgColor=AZUL)
+            c.font = Font(bold=True, color="FFFFFF", size=10)
+            c.alignment = Alignment(horizontal="center", vertical="center",
+                                    wrap_text=True)
+        ws.row_dimensions[1].height = 30
+        ws.freeze_panes = "A2"
+        ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
+        larg = {}
+        for row in ws.iter_rows():
+            for c in row:
+                if c.value is not None:
+                    larg[c.column] = min(44, max(larg.get(c.column, 9),
+                                                 len(str(c.value)) + 2))
+        for col, w in larg.items():
+            ws.column_dimensions[get_column_letter(col)].width = w
+    for nome in abas_level:
+        ws = wb[nome]
+        for row in ws.iter_rows(min_row=2):
+            v = str(row[0].value or "")
+            if v.startswith("L") and v[1:].isdigit():
+                n = int(v[1:])
+                row[0].fill = PatternFill("solid", fgColor=COR_LEVEL.get(n, "FFFFFF"))
+                row[0].font = Font(bold=True, size=10,
+                                   color="FFFFFF" if n <= 4 else "06243D")
+                row[0].alignment = Alignment(horizontal="center")
+
+
+def gerar_xlsx(d):
+    todos, filhos, ceo, area = d["todos"], d["filhos"], d["ceo"], d["area"]
+    ab, dirs = d["ab"], d["diretorias"]
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+
+    # ---------- 1. Resumo
+    ws = wb.create_sheet("Resumo")
+    ws.append(["Diretoria (reporte direto do CEO)", "Responsável", "Ativos",
+               "Gestores", "Pessoas por gestor", "Níveis", "Vagas em aberto",
+               "Vagas de chefia"])
+    for f in dirs:
+        ws.append([f["sigla"], f["nome"], f["ativos"], f["gestores"],
+                   round(f["ativos"] / f["gestores"], 1), f["niveis"],
+                   f["vagas"], f["chefia"] or ""])
+    tot_a = sum(f["ativos"] for f in dirs) + 1
+    tot_g = sum(f["gestores"] for f in dirs) + 1
+    ws.append(["TOTAL", "DMS", tot_a, tot_g, round(tot_a / tot_g, 1),
+               max(p["level"] for p in todos) - 1, len(ab),
+               sum(f["chefia"] for f in dirs)])
+    ws.append([])
+    ws.append(["Level", "Pessoas", "Gestores", "Só executam", "Maior time"])
+    for n in sorted({p["level"] for p in todos}):
+        gr = [p for p in todos if p["level"] == n]
+        g = [p for p in gr if p["diretos"] > 0]
+        ws.append([f"L{n}", len(gr), len(g), len(gr) - len(g),
+                   max([p["diretos"] for p in g], default=0)])
+
+    # ---------- 2. Gestores (substitui as 6 abas por level)
+    ws = wb.create_sheet("Gestores")
+    ws.append(["Level", "Gestor", "Cargo", "Diretoria", "Diretos", "Indiretos",
+               "Total abaixo", "Reporta a", "Lidera outros gestores?",
+               "Marcado no draft"])
+    for p in sorted([x for x in todos if x["diretos"] > 0],
+                    key=lambda x: (x["level"], -x["total"], x["nome"])):
+        marca = ""
+        if p["nome"] in MOVIDOS_PARA_CEO:
+            marca = "caixa azul: passou a reportar ao CEO"
+        if p["nome"] in RISCADOS:
+            sl, _, obs = RISCADOS[p["nome"]]
+            marca = (marca + " | " if marca else "") + f"X no slide {sl}: {obs}"
+        ws.append([f"L{p['level']}", p["nome"], cargo_de(p)[0],
+                   SIGLA.get(area.get(p["nome"], p["nome"]), "DMS"),
+                   p["diretos"], p["indiretos"], p["total"], p["gestor"] or "—",
+                   "Sim" if any(f["diretos"] for f in filhos[p["nome"]]) else "Não",
+                   marca])
+
+    # ---------- 3. Estrutura (todas as pessoas, enxuta)
+    ws = wb.create_sheet("Estrutura")
+    ws.append(["Level", "Nome", "Cargo", "Gestor direto", "Diretos",
+               "Total abaixo", "Diretoria", "Local"])
+    for p in sorted(todos, key=lambda x: (x["level"], -x["diretos"], x["nome"])):
+        ws.append([f"L{p['level']}", p["nome"], cargo_de(p)[0], p["gestor"] or "—",
+                   p["diretos"], p["total"],
+                   SIGLA.get(area.get(p["nome"], p["nome"]), "DMS"), p["local"]])
+
+    # ---------- 4. Vagas por bloco
+    ws = wb.create_sheet("Vagas por bloco")
+    ws.append(["Bloco (área da vaga)", "C-level", "Head responsável",
+               "Cargo como está na planilha", "Qtd", "Nível", "Situação",
+               "Aumento ou reposição", "Folha ou colchão"])
+    agr = Counter()
+    meta = {}
+    for v in ab:
+        k = (str(v["ARÉA"]), str(v["CARGO"]), v["publicada"],
+             str(v.get("Ocupante/Vaga")), str(v["Folha/Colchão"]))
+        agr[k] += 1
+        meta[k] = v
+    for (ar, cargo, pub, ocu, fc), n in sorted(
+            agr.items(), key=lambda kv: (-sum(x for k, x in agr.items()
+                                              if k[0] == kv[0][0]), kv[0][0],
+                                         -kv[1], kv[0][1])):
+        v = meta[(ar, cargo, pub, ocu, fc)]
+        head = v["head"]
+        ws.append([ar, v["C-LEVEL"], head or "— sem bloco no organograma", cargo,
+                   n, v["nivel"], "Publicada no Gupy" if pub else "Ainda a abrir",
+                   ocu, fc])
+
+    # ---------- 5. Divergencias (so o que divergiu)
+    ws = wb.create_sheet("Divergencias")
+    ws.append(["Base comparada", "Situação", "Level", "Nome", "Cargo / posição",
+               "Gestor ou área", "Causa"])
+    for r in d["div"]:
+        ws.append([r["base"], r["tipo"], r["level"],
+                   r["nome_org"] or r["nome_base"],
+                   r["cargo_org"] or f"{r['info1']} · {r['info3']}",
+                   r["gestor"] or r["info2"], r["causa"]])
+
+    estilo(wb, abas_level=("Gestores", "Estrutura"))
+    ws = wb["Divergencias"]
+    for row in ws.iter_rows(min_row=2):
+        if "gap real" in str(row[6].value) or "teste" in str(row[6].value):
+            for c in row:
+                c.fill = PatternFill("solid", fgColor="FDE2E2")
+            row[6].font = Font(bold=True, color="9C0006", size=10)
+    for nome, cor in (("Resumo", VERDE), ("Vagas por bloco", LARANJA)):
+        for c in wb[nome][1]:
+            c.fill = PatternFill("solid", fgColor=cor)
+
+    destino = os.path.join(SAIDA, "Gestores_por_Level.xlsx")
+    wb.save(destino)
+    return destino, wb
 
 
 # ------------------------------------------------------------------ markdown
-def gerar_md(todos, filhos, ceo, como_esta, dados):
-    por_level = defaultdict(list)
-    for p in todos:
-        por_level[p["level"]].append(p)
-    area = diretoria_de(todos, filhos, ceo)
-
+def gerar_md(d):
+    todos, filhos, ceo, area = d["todos"], d["filhos"], d["ceo"], d["area"]
+    ab, dirs = d["ab"], d["diretorias"]
     L = []
     A = L.append
-    A("# Gestores por level — quem administra quem")
+    A("# Gestores da DMS — estrutura, liderança e vagas")
     A("")
-    A("Fontes: **`Colaboradores-factorial (3).xlsx`** (abas `level 4` a `level 8`) "
-      "para a hierarquia, e **`Draft 23 Out 26.pptx`** para os cargos do topo e "
-      "para as duas caixas azuis na linha do CEO.")
+    A("Planilha única: **`Gestores_por_Level.xlsx`**, 5 abas.")
     A("")
-    A("**Leitura da planilha:** em cada aba, a pessoa da linha está no level da aba "
-      "e a coluna B (`Nível de gerente N-1`) é o gestor direto dela. As colunas vêm "
-      "em células mescladas, então o nome vale para todo o bloco abaixo.")
-    A("")
-    A("**Correção aplicada:** o draft mostra duas caixas azuis ligadas ao CEO "
-      "(`Prod | Aéreo | Sampaio` e `Prod | Marítimo | Filipe`) e risca com **X** as "
-      "caixas dessas duas pessoas no organograma do COO. Então Produto Aéreo e "
-      "Produto Marítimo **reportam ao CEO**, e não ao COO como está na planilha. "
-      "Com isso o CEO administra **8 pessoas**, não 6. O passo a passo está em "
-      "`METODOLOGIA.md`.")
-    A("")
-
-    # ---- topo
-    A("## O topo da estrutura")
-    A("")
-    A("| Level | Nome | Cargo | Fonte do cargo | C-LEVEL no DRE | Diretos | Indiretos | Total |")
-    A("|---|---|---|---|---|---|---|---|")
-    for p in sorted([x for x in todos if x["level"] <= 3],
-                    key=lambda x: (x["level"], -x["total"])):
-        cargo, fonte = cargo_de(p)
-        mv = " ⬆" if p["nome"] in MOVIDOS_PARA_CEO else ""
-        A(f"| L{p['level']} | **{p['nome']}**{mv} | {cargo} | {fonte} "
-          f"| {C_LEVEL_DRE.get(p['nome'], '—')} | {p['diretos']} | {p['indiretos']} "
-          f"| **{p['total']}** |")
-    A("")
-    A("⬆ = subiu de level por causa das caixas azuis do draft. "
-      "Na planilha Factorial os dois estão como L4 dentro de Operações.")
-    A("")
-    A("Dois cargos vêm truncados no print do Factorial: *Chief Information & Tec…* "
-      "(Cleyton) e *Chief Strategy Finance …* (Ana Carolina). No DRE são **CITO** e "
-      "**CFSO**. O CEO é **Co-**Chief Executive Officer; a folha de setembro tem "
-      "outras duas pessoas em `OWNERSHIP` fora do organograma "
-      "(Fernando Esteves Arruda, EXECUTIVE BOARD, e Eduardo Reis de Almeida).")
-    A("")
-    A("---")
-    A("")
-
-    # ---- indice
-    A("## Quantos gestores em cada level")
-    A("")
-    A("| Level | Pessoas no level | Gestores | Administram juntos | Só executam |")
-    A("|---|---|---|---|---|")
-    for n in sorted(por_level):
-        gr = por_level[n]
-        g = [p for p in gr if p["diretos"] > 0]
-        soma = sum(p["diretos"] for p in g)
-        A(f"| **L{n}** | {len(gr)} | **{len(g)}** | "
-          f"{f'{soma} pessoas do L{n+1}' if soma else '—'} | {len(gr) - len(g)} |")
-    A(f"| **Total** | **{len(todos)}** | "
-      f"**{sum(1 for p in todos if p['diretos'] > 0)}** | "
-      f"{sum(p['diretos'] for p in todos)} | "
-      f"{sum(1 for p in todos if p['diretos'] == 0)} |")
-    A("")
-    A("No último level ninguém administra ninguém — é o fim da cadeia.")
-    A("")
-    A("---")
-    A("")
-
-    # ---- blocos por level
-    for n in sorted(por_level):
-        gestores = [p for p in por_level[n] if p["diretos"] > 0]
-        simples = [p for p in por_level[n] if p["diretos"] == 0]
-        A(f"# LEVEL {n}")
-        A("")
-        if not gestores:
-            A(f"**Nenhum gestor neste level.** As {len(simples)} pessoas do L{n} "
-              "não administram ninguém.")
-            A("")
-            A(f"| Nome | Cargo | Gestor direto (L{n-1}) |")
-            A("|---|---|---|")
-            for p in sorted(simples, key=lambda x: x["nome"]):
-                A(f"| {p['nome']} | {cargo_de(p)[0]} | {p['gestor']} |")
-            A("")
-            continue
-
-        A(f"**{plural(len(gestores), 'gestor', 'gestores')}** no L{n}, administrando "
-          f"{plural(sum(p['diretos'] for p in gestores), 'pessoa')} diretamente.")
-        if simples:
-            A("")
-            A(f"(as outras {len(simples)} pessoas do L{n} não administram ninguém — "
-              "listadas no fim do bloco)")
-        A("")
-        A("| Gestor | Cargo | Diretos | Indiretos | Total | Confere com o draft? |")
-        A("|---|---|---|---|---|---|")
-        for p in gestores:
-            risco = " ✗" if p["nome"] in RISCADOS else ""
-            A(f"| {p['nome']}{risco} | {cargo_de(p)[0]} | **{p['diretos']}** "
-              f"| {p['indiretos']} | {p['total']} | {confere(p, como_esta)} |")
-        if any(p["nome"] in RISCADOS for p in gestores):
-            A("")
-            A("✗ = caixa riscada com X no draft.")
-        A("")
-
-        for p in gestores:
-            cargo, fonte = cargo_de(p)
-            A(f"### {p['nome']}  ·  L{n}")
-            A("")
-            linha = cargo + (f"  *(cargo lido no {fonte})*" if fonte.startswith("draft")
-                             else "")
-            A(linha + "  ")
-            A(f"Administra **{plural(p['diretos'], 'pessoa')}** diretamente"
-              + (f" e {plural(p['indiretos'], 'pessoa')} indiretamente, "
-                 f"somando {p['total']}." if p["indiretos"] else
-                 " — nenhum indireto: o time todo é de executores.")
-              + (f"  \nReporta a: **{p['gestor']}** (L{n-1})" if p["gestor"] else
-                 "  \nTopo da estrutura — não reporta a ninguém."))
-            if p["nome"] in MOVIDOS_PARA_CEO:
-                A(f"  \n⬆ Reposicionado pelo draft: caixa azul "
-                  f"`{MOVIDOS_PARA_CEO[p['nome']]}`. Na planilha Factorial "
-                  f"reporta a {p['gestor_factorial']}.")
-            if p["nome"] in RISCADOS:
-                sl, pos, obs = RISCADOS[p["nome"]]
-                A(f"  \n✗ Caixa riscada com X no slide {sl} ({pos}): {obs}.")
-            A("")
-            A("| # | Administra | Cargo | Level | Esse também administra? |")
-            A("|---|---|---|---|---|")
-            for i, f in enumerate(filhos[p["nome"]], 1):
-                adm = (f"sim — {plural(f['diretos'], 'pessoa')}" if f["diretos"]
-                       else "não")
-                A(f"| {i} | {f['nome']} | {cargo_de(f)[0]} | L{f['level']} | {adm} |")
-            A("")
-
-        if simples:
-            A(f"### L{n} — não administram ninguém ({len(simples)} pessoas)")
-            A("")
-            A(f"| Nome | Cargo | Gestor direto (L{n-1}) |")
-            A("|---|---|---|")
-            for p in sorted(simples, key=lambda x: x["nome"]):
-                A(f"| {p['nome']} | {cargo_de(p)[0]} | {p['gestor']} |")
-            A("")
-        A("---")
-        A("")
-
-    # ---- divergencias resumidas
-    div = dados["div"]
-    gaps = [r for r in div if "gap real" in r["causa"]]
-    A("# Divergências com as bases financeiras")
-    A("")
-    A("Detalhe linha por linha na aba **`Divergencias`** da planilha. Resumo:")
-    A("")
-    A("| Comparação | Casaram | Só no organograma | Só na base |")
-    A("|---|---|---|---|")
-    for b in ("Baseline DRE 26.2", "Folha Set/26"):
-        c = sum(1 for r in div if r["base"] == b and r["tipo"] == "casou")
-        o = sum(1 for r in div if r["base"] == b and r["tipo"] == "só no organograma")
-        s = sum(1 for r in div if r["base"] == b and r["tipo"].startswith("só n")
-                and r["tipo"] != "só no organograma")
-        A(f"| Organograma × {b} | {c if c else '—'} | {o} | {s} |")
-    A("")
-    A("Quase toda diferença é data de corte: o organograma é de outubro e inclui "
-      "admissões até 16/nov; a folha é de setembro; o DRE é de agosto. "
-      "Descontado isso, mais quem está em aviso prévio, os sócios, as linhas de "
-      "consultoria e a linha duplicada, sobram as pessoas abaixo — "
-      "**com custo lançado e sem posição no organograma**:")
-    A("")
-    agrupado = {}
-    for r in gaps:
-        k = " ".join(toks(r["nome_base"]))
-        agrupado.setdefault(k, []).append(r)
-    A("| Nome | Como aparece na folha de set/26 | Como aparece no DRE |")
-    A("|---|---|---|")
-    for k, rs in agrupado.items():
-        f = next((r for r in rs if r["base"] == "Folha Set/26"), None)
-        d = next((r for r in rs if r["base"] == "Baseline DRE 26.2"), None)
-        nome = (d or f)["nome_base"].title()
-        A(f"| **{nome}** "
-          f"| {f['info1'] + ' · ' + f['info2'] if f else 'não está'} "
-          f"| {d['info1'] + ' · ' + d['info2'] + ' · ' + d['info3'] if d else 'não está'} |")
-    A("")
-    A(f"São {len(agrupado)} pessoas: duas de desenvolvimento de indústrias e um "
-      "estagiário de Ocean Operations. Todas têm custo lançado nas duas bases "
-      "e nenhuma tem gestor no Factorial.")
-    A("")
-    A(f"E `{TESTE}`, um registro de teste com admissão em 2022 cadastrado como "
-      "*Air Freight Design Specialist* sob Rafael Araujo Belfiore: infla o "
-      "organograma em 1 pessoa.")
-    A("")
-    A("---")
-    A("")
-    A("## Anotações encontradas no draft")
-    A("")
-    A("| Slide(s) | O que está anotado em cima do print |")
+    A("| Aba | O que tem |")
     A("|---|---|")
-    for sl, nota in NOTAS_DRAFT:
-        A(f"| {sl} | {str(nota).replace('|', '/')} |")
+    A("| `Resumo` | uma linha por diretoria: ativos, gestores, pessoas por gestor, "
+      "níveis, vagas e vagas de chefia; abaixo, o corte por level |")
+    A("| `Gestores` | os 66 gestores, com filtro de level — substitui as seis abas "
+      "`Lx gestores` da versão anterior |")
+    A("| `Estrutura` | as 336 pessoas com gestor direto, em 8 colunas |")
+    A("| `Vagas por bloco` | as 49 vagas como estão escritas na planilha de vagas, "
+      "ligadas ao head do bloco |")
+    A("| `Divergencias` | só o que divergiu entre organograma, folha e DRE |")
     A("")
     A("---")
+    A("")
+    A("## A estrutura em uma tabela")
+    A("")
+    A("| Diretoria | Responsável | Ativos | Gestores | Pessoas por gestor | Níveis "
+      "| Vagas | Vagas de chefia |")
+    A("|---|---|---|---|---|---|---|---|")
+    for f in dirs:
+        A(f"| {f['sigla']} | {f['nome']} | {f['ativos']} | {f['gestores']} "
+          f"| {f['ativos']/f['gestores']:.1f} | {f['niveis']} | {f['vagas']} "
+          f"| {f['chefia'] or '—'} |")
+    ta = sum(f["ativos"] for f in dirs) + 1
+    tg = sum(f["gestores"] for f in dirs) + 1
+    A(f"| **TOTAL** | DMS | **{ta}** | **{tg}** | **{ta/tg:.1f}** "
+      f"| {max(p['level'] for p in todos)-1} | **{len(ab)}** "
+      f"| **{sum(f['chefia'] for f in dirs)}** |")
+    A("")
+    A("---")
+    A("")
+    A("## Pontos da camada de liderança")
+    A("")
+    solo = [p for p in todos if p["diretos"] == 1]
+    sem = [p for p in todos if any(k in p["cargo"].lower() for k in CHEFIA)
+           and p["diretos"] == 0]
+    maior = max(todos, key=lambda p: p["diretos"])
+    A(f"1. **Um gestor com {maior['diretos']} liderados diretos** — {maior['nome']} "
+      f"(*{maior['cargo']}*), contra média de 5,1 na casa.")
+    A(f"2. **{len(solo)} gestores com um único liderado**: "
+      + "; ".join(f"{p['nome']} (L{p['level']})" for p in solo) + ".")
+    A(f"3. **{len(sem)} pessoas com título de chefia e nenhum liderado**: "
+      + "; ".join(f"{p['nome']} ({p['cargo']})" for p in sem) + ".")
+    A("4. **Quatro Team Leaders lideram outros Team Leaders com o título idêntico** "
+      "em Operações Aéreo: Gabriella De Melo Pereira e Pamela Iris Gregorio Ibarra "
+      "lideram Julia Heinrichs, Lenice Barbosa, Thais Mathias e Julia Varella, "
+      "todos *Air Freight Operations Team Leader*. O draft risca com X justamente "
+      "a Gabriella e a Pamela.")
+    chefia = [v for v in ab if v["nivel"] in ("Head", "Team Leader")]
+    A(f"5. **{len(chefia)} vagas de chefia em aberto**, "
+      f"{sum(1 for v in chefia if not v['publicada'])} sem processo iniciado.")
+    A("")
+    A("---")
+    A("")
+    A("## As 49 vagas como aparecem na planilha")
+    A("")
+    A("| Bloco | Cargo na planilha | Qtd | Situação | Aumento ou reposição |")
+    A("|---|---|---|---|---|")
+    agr = Counter((str(v["ARÉA"]), str(v["CARGO"]), v["publicada"],
+                   str(v.get("Ocupante/Vaga"))) for v in ab)
+    tot_area = Counter(str(v["ARÉA"]) for v in ab)
+    for (ar, cargo, pub, ocu), n in sorted(
+            agr.items(), key=lambda kv: (-tot_area[kv[0][0]], kv[0][0], -kv[1])):
+        A(f"| {ar} | `{cargo}` | {n} | "
+          f"{'Publicada' if pub else 'Ainda a abrir'} | {ocu} |")
+    A("")
+    A("---")
+    A("")
+    A("## Divergências que sobraram")
+    A("")
+    gaps = [r for r in d["div"] if "gap real" in r["causa"]]
+    A(f"Depois de descontar data de corte, aviso prévio, sócios, consultorias e "
+      f"linha duplicada, restam **{len({r['nome_base'] for r in gaps})} pessoas "
+      "com custo lançado e sem posição no organograma**. Detalhe na aba "
+      "`Divergencias`.")
     A("")
     A("## Como regerar")
     A("")
@@ -259,149 +369,18 @@ def gerar_md(todos, filhos, ceo, como_esta, dados):
     return "\n".join(L)
 
 
-# ------------------------------------------------------------------ excel
-def gerar_xlsx(todos, filhos, ceo, como_esta, dados):
-    wb = openpyxl.Workbook()
-    wb.remove(wb.active)
-    por_level = defaultdict(list)
-    for p in todos:
-        por_level[p["level"]].append(p)
-    area = diretoria_de(todos, filhos, ceo)
-
-    # ---- 1. quem reporta a quem
-    ws = wb.create_sheet("Quem reporta a quem")
-    ws.append(["Level", "Nome", "Cargo", "Fonte do cargo", "Diretos", "Indiretos",
-               "Total abaixo", "Gestor direto", "Level do gestor", "Diretoria (L3)",
-               "Level na planilha Factorial", "Gestor na planilha Factorial",
-               "Observação do draft", "Local", "Início"])
-    for p in sorted(todos, key=lambda x: (x["level"], -x["diretos"], x["nome"])):
-        cargo, fonte = cargo_de(p)
-        obs = p["movido"]
-        if p["nome"] in RISCADOS:
-            sl, pos, o = RISCADOS[p["nome"]]
-            obs = (obs + " | " if obs else "") + f"riscado com X no slide {sl}: {o}"
-        ws.append([f"L{p['level']}", p["nome"], cargo, fonte, p["diretos"],
-                   p["indiretos"], p["total"], p["gestor"] or "—",
-                   f"L{p['level']-1}" if p["gestor"] else "—",
-                   area.get(p["nome"], "—" if p["level"] <= 2 else ""),
-                   f"L{p['level_factorial']}", p["gestor_factorial"] or "—",
-                   obs, p["local"], p["inicio"]])
-
-    # ---- 2. resumo por level
-    ws = wb.create_sheet("Resumo por level")
-    ws.append(["Level", "Pessoas", "Gestores", "Só executam",
-               "Diretos administrados", "Maior time (diretos)"])
-    for n in sorted(por_level):
-        gr = por_level[n]
-        g = [p for p in gr if p["diretos"] > 0]
-        ws.append([f"L{n}", len(gr), len(g), len(gr) - len(g),
-                   sum(p["diretos"] for p in g),
-                   max([p["diretos"] for p in g], default=0)])
-    ws.append(["Total", len(todos), sum(1 for p in todos if p["diretos"] > 0),
-               sum(1 for p in todos if p["diretos"] == 0),
-               sum(p["diretos"] for p in todos), ""])
-    ws.append([])
-    ws.append(["Diretoria (L3)", "Responsável", "Cargo", "Diretos", "Pessoas na área"])
-    for l3 in filhos[ceo]:
-        ws.append([l3["nome"], l3["nome"], cargo_de(l3)[0], l3["diretos"], l3["total"]])
-
-    # ---- 3. uma aba por level
-    for n in sorted(por_level):
-        gestores = [p for p in por_level[n] if p["diretos"] > 0]
-        if not gestores:
-            continue
-        ws = wb.create_sheet(f"L{n} gestores")
-        ws.append([f"Gestor (L{n})", "Cargo do gestor", "Diretos", "Indiretos",
-                   "Total abaixo", "Confere com o draft?", "Administra",
-                   "Cargo de quem ele administra", "Level",
-                   "Esse administra quantos?"])
-        for p in gestores:
-            for f in filhos[p["nome"]]:
-                ws.append([p["nome"], cargo_de(p)[0], p["diretos"], p["indiretos"],
-                           p["total"], confere(p, como_esta), f["nome"],
-                           cargo_de(f)[0], f"L{f['level']}", f["diretos"]])
-
-    # ---- 4. NOVA aba: divergencias
-    ws = wb.create_sheet("Divergencias")
-    ws.append(["Base comparada", "Situação", "Level", "Nome no organograma",
-               "Cargo no organograma", "Gestor", "Nome na base", "C-LEVEL / Posição",
-               "Área / Centro de custo", "Posição padrão / Situação",
-               "Folha / Tipo de custo", "TT Custo/Mês", "Causa"])
-    for r in dados["div"]:
-        ws.append([r["base"], r["tipo"], r["level"], r["nome_org"], r["cargo_org"],
-                   r["gestor"], r["nome_base"], r["info1"], r["info2"], r["info3"],
-                   r["info4"], r["custo"], r["causa"]])
-
-    # ---- formatacao
-    cor = {2: "0D1F31", 3: "1B3A5C", 4: "2E6CA4", 5: "67A3D9", 6: "AED2F0",
-           7: "DFEAF5", 8: "F4F8FC"}
-    for sheet in wb.worksheets:
-        for c in sheet[1]:
-            c.fill = PatternFill("solid", fgColor="1B3A5C")
-            c.font = Font(bold=True, color="FFFFFF")
-            c.alignment = Alignment(horizontal="center", vertical="center",
-                                    wrap_text=True)
-        sheet.freeze_panes = "A2"
-        sheet.auto_filter.ref = f"A1:{get_column_letter(sheet.max_column)}1"
-        larg = {}
-        for row in sheet.iter_rows():
-            for c in row:
-                if c.value is not None:
-                    larg[c.column] = min(46, max(larg.get(c.column, 10),
-                                                 len(str(c.value)) + 2))
-        for col, w in larg.items():
-            sheet.column_dimensions[get_column_letter(col)].width = w
-
-    ws = wb["Quem reporta a quem"]
-    for row in ws.iter_rows(min_row=2):
-        n = int(str(row[0].value)[1:])
-        row[0].fill = PatternFill("solid", fgColor=cor.get(n, "F4F8FC"))
-        row[0].font = Font(bold=True, color="FFFFFF" if n <= 4 else "06243D")
-        row[0].alignment = Alignment(horizontal="center")
-    ws = wb["Divergencias"]
-    tons = {"só na folha": "FDE2E2", "só no DRE": "FDF0DC",
-            "só no organograma": "E3F0FD", "casou": "FFFFFF"}
-    for row in ws.iter_rows(min_row=2):
-        f = PatternFill("solid", fgColor=tons.get(str(row[1].value), "FFFFFF"))
-        for c in row[:2]:
-            c.fill = f
-        if "gap real" in str(row[12].value) or "teste" in str(row[12].value):
-            row[12].font = Font(bold=True, color="9C0006")
-
-    destino = os.path.join(SAIDA, "Gestores_por_Level.xlsx")
-    wb.save(destino)
-    return destino
-
-
 def main():
-    fac = ler_factorial()
-    # arvore da planilha pura, usada para conferir os numeros impressos no draft
-    t0, f0, ceo0 = montar(fac, aplicar_draft=False)
-    como_esta = {p["nome"]: p["total"] for p in t0}
-    # arvore com as caixas azuis do draft aplicadas
-    todos, filhos, ceo = montar(fac, aplicar_draft=True)
-
-    dados = {
-        "base": ler_aba("Base_Setembro26 (1).xlsx", "Setembro Unificado", "NOME"),
-        "dre": ler_aba("Baseline DRE 26.2.xlsx", "Baseline ativos agosto", "Colaborador"),
-    }
-    dados["div"] = divergencias(todos, dados["base"], dados["dre"])
-
-    cam = os.path.join(SAIDA, "Gestores_por_Level.md")
-    with open(cam, "w", encoding="utf-8") as fh:
-        fh.write(gerar_md(todos, filhos, ceo, como_esta, dados) + "\n")
-    xl = gerar_xlsx(todos, filhos, ceo, como_esta, dados)
-
-    print(f"{len(todos)} pessoas | CEO administra {filhos[ceo].__len__()} diretos")
-    for n in sorted({p['level'] for p in todos}):
-        g = [p for p in todos if p["level"] == n and p["diretos"] > 0]
-        print(f"  L{n}: {sum(1 for p in todos if p['level']==n):>3} pessoas, "
-              f"{len(g):>2} gestores")
-    conf = confere_draft(t0)
-    print(f"draft: {len(conf)} gestores conferidos, "
-          f"{sum(1 for c in conf if c['dif'])} com diferença")
-    print(f"divergencias: {len(dados['div'])} linhas")
-    print("ok ->", cam)
+    d = levantar()
+    md = os.path.join(SAIDA, "Gestores_por_Level.md")
+    with open(md, "w", encoding="utf-8") as fh:
+        fh.write(gerar_md(d) + "\n")
+    xl, wb = gerar_xlsx(d)
+    print(f"{len(d['todos'])} pessoas | "
+          f"{sum(1 for p in d['todos'] if p['diretos']>0)} gestores | "
+          f"{len(d['ab'])} vagas em aberto")
+    print("abas:", [ws.title + f" ({ws.max_row-1})" for ws in wb.worksheets])
+    print(f"divergências: {len(d['div'])} linhas (sem as que casaram)")
+    print("ok ->", md)
     print("ok ->", xl)
 
 

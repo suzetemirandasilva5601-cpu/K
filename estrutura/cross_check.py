@@ -382,16 +382,8 @@ def divergencias(todos, base, dre):
     linhas = []
     idx = indice_folha(base)
 
-    pd_, soF_dre, soD = emparelha(todos, "nome", dre, "Colaborador")
-    for f, d, s in pd_:
-        linhas.append({
-            "base": "Baseline DRE 26.2", "tipo": "casou", "level": f"L{f['level']}",
-            "nome_org": f["nome"], "cargo_org": f["cargo"] or SEM_CARGO,
-            "gestor": f["gestor"] or "—", "nome_base": d["Colaborador"],
-            "info1": d["C-LEVEL"], "info2": d["ARÉA (Centro de Custo)"],
-            "info3": d["POSIÇÃO PADRÃO 26.2"], "info4": d["Folha/Colchão"],
-            "custo": d["TT Custo/Mês"], "causa": "",
-        })
+    # so as divergencias: quem casou nas duas bases nao entra na lista
+    _, soF_dre, soD = emparelha(todos, "nome", dre, "Colaborador")
     for f in soF_dre:
         linhas.append({
             "base": "Baseline DRE 26.2", "tipo": "só no organograma",
@@ -429,8 +421,11 @@ def divergencias(todos, base, dre):
             "info4": b["TIPO DE CUSTO"], "custo": "",
             "causa": classifica_folha(b, idx),
         })
-    ordem = {"só na folha": 0, "só no DRE": 1, "só no organograma": 2, "casou": 3}
-    linhas.sort(key=lambda r: (ordem[r["tipo"]], r["base"], r["nome_org"] or r["nome_base"]))
+    # gap real primeiro, depois o resto
+    ordem = {"só na folha": 0, "só no DRE": 1, "só no organograma": 2}
+    linhas.sort(key=lambda r: (0 if "gap real" in r["causa"] else 1,
+                               ordem[r["tipo"]], r["base"],
+                               r["nome_org"] or r["nome_base"]))
     return linhas
 
 
