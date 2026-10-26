@@ -229,7 +229,8 @@ def ler_factorial():
         ws = wb[aba]
         g_acima = g_direto = None
         for r in ws.iter_rows(min_row=3, values_only=True):
-            if all(c is None for c in r):
+            # linha sem nome nao e pessoa (a planilha tem celulas perdidas)
+            if not (r[2] or r[3]):
                 continue
             if r[0]:
                 g_acima = str(r[0]).strip()
