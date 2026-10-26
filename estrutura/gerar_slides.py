@@ -243,6 +243,54 @@ def linha(s, x1, y1, x2, y2, cor=CINZA):
     return ln
 
 
+def tabela(s, l, t, w, h, cabec, linhas, larguras, tam=8, destaques=()):
+    gt = s.shapes.add_table(len(linhas) + 1, len(cabec), px(l), px(t), px(w), px(h))
+    tb = gt.table
+    tb.first_row = True
+    for i, lg in enumerate(larguras):
+        tb.columns[i].width = px(lg)
+    alt = int(round(h * 9525 / (len(linhas) + 1)))
+    for r in tb.rows:
+        r.height = Emu(alt)
+    for j, c in enumerate(cabec):
+        cel = tb.cell(0, j)
+        cel.fill.solid()
+        cel.fill.fore_color.rgb = AZUL
+        cel.margin_left = cel.margin_right = px(4)
+        cel.margin_top = cel.margin_bottom = px(0)
+        cel.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = cel.text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER if 0 < j < 5 else PP_ALIGN.LEFT
+        r = p.add_run()
+        r.text = c
+        r.font.size = Pt(tam)
+        r.font.bold = True
+        r.font.name = "Arial"
+        r.font.color.rgb = BRANCO
+    for i, ln in enumerate(linhas, 1):
+        forte = i - 1 in destaques
+        total = str(ln[0]).startswith("Total")
+        for j, v in enumerate(ln):
+            cel = tb.cell(i, j)
+            cel.fill.solid()
+            cel.fill.fore_color.rgb = (FUNDO_LAR if forte else
+                                       (FUNDO if total else
+                                        (BRANCO if i % 2 else
+                                         RGBColor(0xF7, 0xF7, 0xF7))))
+            cel.margin_left = cel.margin_right = px(4)
+            cel.margin_top = cel.margin_bottom = px(0)
+            cel.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p = cel.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER if 0 < j < 5 else PP_ALIGN.LEFT
+            r = p.add_run()
+            r.text = str(v)
+            r.font.size = Pt(tam)
+            r.font.bold = total or (j == 0 and forte)
+            r.font.name = "Arial"
+            r.font.color.rgb = TEXTO
+    return tb
+
+
 def painel(s, l, t, w, h, titulo, itens, cor=VERDE, fundo=FUNDO):
     cx(s, l, t, w, 24, titulo, fundo=cor, tam=10)
     caixa = cx(s, l, t + 27, w, h - 27, [""], fundo=fundo, borda=cor,
@@ -362,82 +410,129 @@ def slide_geral(prs, d):
 
 
 # ------------------------------------------------------------------ slide 3
+SETORES = [
+    ("Air Operations", "Carolina Bento Mendoza", "Air Operations",
+     "4 camadas de team leader: 4 TLs de L7 respondem a TLs de L6 com o título "
+     "idêntico, e 14 das 19 vagas nunca foram abertas",
+     "Colapsar para 2 camadas e criar Sr. Team Leader para separar a senioridade "
+     "real; abrir primeiro as vagas de EUA e Europa"),
+    ("Ocean Operations", "Natalia Correia Da Costa Parreira", "Ocean Operations",
+     "Times desbalanceados: um TL com 12 diretos e outro com 2; as 3 vagas são "
+     "reposição e nenhuma foi aberta",
+     "Reequilibrar os dois times e abrir as 3 reposições, que já estão aprovadas "
+     "como quadro"),
+    ("Air Product", "Filipe Teixeira Sampaio", "Air Product",
+     "2 diretos para 29 pessoas e 3 das 7 vagas são de chefia, incluindo 2 TL "
+     "Americas que também existem em Air Operations",
+     "Consolidar as 3 vagas de TL Americas num único dono antes de publicar, "
+     "para não contratar o mesmo cargo duas vezes"),
+    ("Ocean Product", "Filipe Carneiro De Oliveira", "Ocean Product",
+     "Asia Trade & Market Intelligence é posição única, sem suplente, e as 2 "
+     "vagas são reposição",
+     "Definir cobertura para a praça Ásia e repor as 2 posições de design"),
+    ("Quality & Op. Intel.", "Marco Antonio Maraia Villa",
+     "Quality & Operational Intelligence",
+     "6 diretos no head, dos quais 4 são especialistas sem camada; 1 analista em "
+     "MIA reporta a São Paulo",
+     "Agrupar os 3 Logistics Process Specialist sob o TL que já existe e passar o "
+     "analista de MIA para a gestão local"),
+    ("Overland", "Possidonio Dantas de Almeida Neto", "Overland (Europa)",
+     "2 Warehouse TLs para 5 pessoas, um deles sem nenhum liderado, e o head "
+     "comanda MIA, IAH e NY de São Paulo",
+     "Um TL por praça e liderança local nos EUA; decidir se o Head de Europa "
+     "pertence a Overland ou a Operações"),
+    ("Operational Excellence", "Jonathas Amancio Alves", None,
+     "6 Key Account Executives direto no head, sem nenhuma camada; o DRE de "
+     "agosto tinha 10 KAM e 4 saíram sem reposição",
+     "Confirmar o quadro-alvo de KAM antes de repor e avaliar uma camada de "
+     "coordenação se voltar a 10"),
+    ("Cold Chain", "Lucy Maia De Moraes", None,
+     "Head com 2 liderados: é uma diretoria inteira para coordenar 2 pessoas",
+     "Fundir com Air Product ou com Quality e manter Cold Chain como "
+     "especialidade, não como área"),
+    ("Special Operations", None, "Special Operations",
+     "Tem 1 vaga na planilha e não tem head nem equipe no organograma",
+     "Definir o dono da frente antes de abrir a vaga"),
+]
+
+
 def slide_operacoes(prs, d):
     s = prs.slides[2]
     limpar(s)
-    vol, pess, gest, vp, va = d["vol"], d["pess"], d["gest"], d["vp"], d["va"]
-    idx, filhos, tam = d["idx"], d["filhos"], d["tam"]
-    total_vol = sum(vol.values())
-    fora = vol["EUA"] + vol["Europa"]
+    idx, filhos, vol = d["idx"], d["filhos"], d["vol"]
+    vivo = {p["nome"] for p in d["hoje"]}
+    ab = d["ab"]
+
+    def sub(n):
+        out, pil = [], [idx[n]]
+        while pil:
+            x = pil.pop()
+            if x["nome"] in vivo:
+                out.append(x)
+            pil.extend(filhos[x["nome"]])
+        return out
+
+    vagas = Counter()
+    abrir = Counter()
+    for v in ab:
+        a = str(v["ARÉA"])
+        vagas[a] += 1
+        abrir[a] += 0 if v["pub"] else 1
+
+    linhas, destaques = [], []
+    tp = tg = tv = ta = 0
+    for k, (rot, head, area, falha, rec) in enumerate(SETORES):
+        if head:
+            eq = sub(head)
+            p = len(eq)
+            g = sum(1 for x in eq if x["diretos"] > 0)
+        else:
+            p = g = 0
+        v = vagas[area] if area else 0
+        a = abrir[area] if area else 0
+        tp += p
+        tg += g
+        tv += v
+        ta += a
+        if a >= 7 or (v and not p):
+            destaques.append(k)
+        linhas.append([rot, p or "—", g or "—", v or "—", a or "—", falha, rec])
+    linhas.append(["Total Operações", tp, tg, tv, ta,
+                   "8 heads, 2 deles com 2 liderados ou menos", ""])
 
     cabecalho(
-        s, "Estrutura × Vagas | Operações por praça",
-        f"EUA e Europa originam {br(fora)} dos {br(total_vol)} embarques por mês com "
-        f"15 pessoas e 16 vagas em aberto; 12 dessas vagas nunca foram abertas "
-        "e a Europa não tem head",
-        f"Embarques originados por mês (média abr–set/26, CIS) · "
-        f"{d['agentes']} agentes terceiros originam {br(vol['Agentes'])} · "
-        "praça = entidade no organograma e escritório de origem no CIS",
-        "Fonte: ATY | CIS ORDERS (13/10/26, campo off, média mensal abr–set/26) · "
-        "Colaboradores Factorial (organograma out/26) · planilha de vagas "
-        "(21/10/26) · Gupy")
+        s, "Estrutura × Vagas | Operações (COO)",
+        f"Os {len(filhos['Raioni De Oliveira Santos'])} setores do COO somam "
+        f"{tp} pessoas e {tv} vagas, mas {ta} nunca foram abertas; a falha se "
+        "repete em dois padrões — camada de chefia duplicada e vaga sem dono",
+        f"COO: {tp + 1} pessoas · 8 heads diretos · {tv} vagas, {tv - ta} "
+        f"publicadas · {br(sum(vol.values()))} embarques originados por mês "
+        "(CIS, abr–set/26)",
+        "Fonte: ATY | Colaboradores Factorial (organograma out/26, sem as 5 "
+        "admissões de novembro) · planilha de vagas (21/10/26) · Gupy · "
+        "Baseline DRE 26.2 · CIS ORDERS (13/10/26)")
 
-    # cadeia do COO por praca
-    rotulo(s, 37, 152, 1207, "A cadeia de Operações, por praça",
-           "cargo, quadro atual, vagas em aberto e embarques originados por mês")
-    cx(s, 540, 194, 200, 36, ["COO", f"{tam('Raioni De Oliveira Santos')} pessoas"],
-       fundo=AZUL, tam=11, tam2=8.5)
-    linha(s, 640, 230, 640, 242)
-    linha(s, 186, 242, 1094, 242)
+    rotulo(s, 37, 152, 1207, "Diagnóstico por setor de Operações",
+           "quadro atual, vagas em aberto, a falha identificada e o que mudar; "
+           "em laranja, os setores que travam a fila")
 
-    blocos = [
-        ("Head of Air Operations", "Customer Care e Exportação · Brasil",
-         pess["Brasil"], vp["Brasil"], va["Brasil"], vol["Brasil"], VERDE),
-        ("Air Freight Lead Coordinator", f"Agentes OFF · {d['agentes']} terceiros",
-         51, 0, 0, vol["Agentes"], VERDE),
-        ("Head of Overland", "EUA · MIA, IAH, NY",
-         pess["EUA"], vp["EUA"], va["EUA"], vol["EUA"], LARANJA),
-        ("VAGA · Head de Europa", "Europa · AMS, FRA, LIS",
-         pess["Europa"], vp["Europa"], va["Europa"], vol["Europa"], LARANJA),
-    ]
-    larg, passo = 272, 290
-    for i, (cargo, onde, p, v, a, vl, cor) in enumerate(blocos):
-        x = 36 + i * passo
-        linha(s, x + larg / 2, 242, x + larg / 2, 254, cor=cor)
-        vaga = "vaga publicada" if cargo.startswith("VAGA") else (
-            f"{v} vagas · {a} a abrir" if v else "sem vaga")
-        cx(s, x, 254, larg, 62, [cargo, onde, f"{p} pessoas · {vaga}"],
-           fundo=cor, tam=9.5, tam2=7.5,
-           borda=LARANJA if cargo.startswith("VAGA") else None,
-           tracejado=cargo.startswith("VAGA"))
-        cx(s, x, 320, larg, 26, f"{br(vl)} embarques/mês", fundo=FUNDO,
-           borda=cor, cor=TEXTO, tam=9)
+    tabela(s, 36, 196, 1208, 330,
+           ["Setor", "Pessoas", "Gestores", "Vagas", "A abrir",
+            "Falha identificada", "Recomendação"],
+           linhas, [168, 68, 72, 58, 64, 350, 428], tam=8,
+           destaques=tuple(destaques))
 
-    painel(s, 36, 372, 596, 280, "A conta por praça", [
-        ("EUA · 10 pessoas, 9 vagas:", f"{br(vol['EUA'])} embarques/mês originados, "
-         f"{round(vol['EUA']/pess['EUA'])} por pessoa. 1 gestor local, e são "
-         "2 Warehouse Team Leaders — um deles sem nenhum liderado"),
-        ("Europa · 5 pessoas, 7 vagas:", f"{br(vol['Europa'])} embarques/mês, "
-         f"{round(vol['Europa']/pess['Europa'])} por pessoa. Sem head; "
-         "a única TL está em Portugal e reporta ao Brasil"),
-        ("Agentes OFF ·", f"{d['agentes']} agentes terceiros originam "
-         f"{br(vol['Agentes'])} embarques/mês, "
-         f"{round(vol['Agentes']/total_vol*100)}% do total, coordenados por 51 "
-         "pessoas no Brasil"),
-        ("Brasil ·", f"{br(vol['Brasil'])} embarques/mês originados, mas a equipe "
-         "processa o lado destino de todos os embarques"),
-    ], cor=AZUL, fundo=FUNDO)
-
-    painel(s, 648, 372, 596, 280, "As ineficiências da cadeia", [
-        ("Europa sem dono:", "58% do quadro europeu está em aberto e a praça "
-         f"que origina {br(vol['Europa'])} embarques/mês não tem head nem team "
-         "leader local"),
-        ("Fila travada fora do Brasil:", "as 12 vagas que nunca foram abertas "
-         "estão todas em EUA (6) e Europa (6) — o gargalo é a abertura interna"),
-        ("Gestão à distância:", "13 das 15 pessoas de EUA e Europa têm gestor "
-         "no Brasil; o Head of Overland responde por MIA, IAH e NY de São Paulo"),
-        ("Camada que se repete:", "Air Operations tem 4 níveis de team leader; "
-         "o draft risca 3 caixas dessa cadeia sem indicar destino"),
+    painel(s, 36, 540, 1208, 112, "As três mudanças que destravam mais", [
+        ("1. Air Operations, de 4 camadas para 2:", "é o maior setor (83 pessoas, "
+         "15 gestores) e o que concentra as vagas; separar Sr. Team Leader de "
+         "Team Leader resolve a cadeia de TL sobre TL e libera 2 níveis"),
+        ("2. Um dono para as vagas de chefia:", "as 3 de TL Americas estão "
+         "divididas entre Air Operations e Air Product, e a de Head de Europa "
+         "está dentro de Overland — definir o dono antes de publicar"),
+        ("3. Liderança na praça que origina o volume:", f"EUA e Europa originam "
+         f"{br(vol['EUA'] + vol['Europa'])} dos {br(sum(vol.values()))} embarques "
+         "por mês com 15 pessoas; a Europa não tem head nem TL local e as 12 "
+         "vagas paradas estão todas nas duas"),
     ], cor=LARANJA, fundo=FUNDO_LAR)
     return s
 
