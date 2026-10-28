@@ -128,6 +128,71 @@
 
 ---
 
+## 1b. Jurídico/Regulatório — bullets adicionais para CD em NY
+- EIN / registro fiscal da operação nos EUA (se exigido para faturar/pagar localmente).
+- Enquadramento da DMS: opera como IAC (Indirect Air Carrier) ou só via parceiro?
+- Bond aduaneiro (customs bond) necessário para carga de exportação.
+- Registro no ACAS (Air Cargo Advance Screening) da CBP para dados antecipados.
+- Conformidade com regras da FAA/TSA para carga aérea.
+- Para healthcare/pharma: licença e boas práticas de armazenagem (GDP) do parceiro.
+- Para DG (dangerous goods): certificação IATA DGR do parceiro e dos operadores.
+- Verificar sanções/lista restritiva (denied parties) de clientes e shippers novos.
+- Contrato de seguro de responsabilidade (liability) cobrindo a carga no CD.
+- Regras de retenção de documentos (quanto tempo guardar MBL, HBL, invoices).
+
+## 2b. Financeiro — bullets adicionais para CD em NY
+- Definir forma de pagamento ao parceiro (wire/USD) e prazo (net 15/30).
+- Capital de giro para cobrir o gap entre pagar o parceiro e receber do cliente.
+- Política de adiantamento (prepaid) vs. faturado por embarque.
+- Tabela de preço de venda (selling) para a praça nova.
+- Custos fixos mensais da base (aluguel de espaço, analista, taxas do parceiro).
+- Custos variáveis por embarque (screening, handling, transfer, armazenagem).
+- Impostos sobre serviço na praça / retenção na fonte, se houver.
+- Conta bancária ou meio de pagamento local, se necessário.
+- Rateio do custo da base entre as indústrias/clientes atendidos.
+
+## 3b. Sistema/Infra — bullets adicionais para CD em NY
+- Criar o código da station/origem no sistema operacional.
+- Parametrizar tarifas de compra e venda da praça no sistema.
+- Cadastrar o parceiro como fornecedor e o aeroporto JFK como ponto de origem.
+- Garantir rastreio (tracking) do embarque desde o recebimento no CD.
+- Modelo de pré-alerta e warehouse receipt digital com o parceiro.
+- Acesso remoto e credenciais do analista local.
+- E-mail/ramal/assinatura corporativa da nova praça.
+- Relatórios de volume e performance configurados para a station.
+
+## 4b. Capital humano — bullets adicionais para CD em NY
+- Definir idioma de trabalho e fuso (NY x Brasil) para os handoffs.
+- Jornada e disponibilidade para AOG fora do horário comercial.
+- Contrato de trabalho local (PJ, CLT-equivalente, ou via parceiro?).
+- Treinamento do analista no SOP de aerospace e em AOG.
+- Definir a quem o analista reporta (operação Brasil x local).
+- Metas e indicadores individuais do analista no 1º ciclo.
+
+## 5b. Fornecedores — bullets adicionais para CD em NY
+- Transportadora rodoviária (trucking/drayage) para transfer ao aeroporto.
+- Agente de handling no aeroporto, se o parceiro não cobrir.
+- Fornecedor de embalagem/paletização, se exigido por indústria.
+- Fornecedor de solução refrigerada (para destravar healthcare na fase 2).
+- Acordo de contingência (parceiro backup) para pico de AOG.
+- Avaliação de custo x prazo x qualidade de cada fornecedor (não só preço).
+- Definir SLA de recebimento e de transfer com cada fornecedor.
+
+## 6b. Clientes/Carga — bullets adicionais para CD em NY
+- Listar clientes âncora que puxam o volume inicial.
+- Mapear sazonalidade da carga aerospace (picos de AOG).
+- Definir cutoff: até quando o cliente envia a carga para embarcar no dia.
+- Separar export aéreo, AOG e eventual marítimo por fluxo.
+- Estimar peso médio e perfil de carga (faixa de kg, dimensões).
+- Validar se o volume previsto sustenta a frequência de voos de JFK.
+- Mapear rotas de destino mais demandadas a partir de JFK.
+
+## 7b. Comunicação — bullets adicionais para CD em NY
+- Comunicado interno aos times (operação, KAM, faturamento) sobre o go-live.
+- Atualização do site/material institucional com a nova praça.
+- Aviso formal aos clientes que terão carga migrada de Miami para JFK.
+- Roteiro de resposta a dúvidas de cliente sobre a mudança de origem.
+
 ## 9. Pontos crus ainda em aberto (preencher com o cliente)
 - Volumetria real de aerospace Miami→JFK (sem número até agora).
 - Prazo de resposta do TSA (define o caminho crítico).
