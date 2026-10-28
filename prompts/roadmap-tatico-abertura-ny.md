@@ -187,6 +187,24 @@
 - Validar se o volume previsto sustenta a frequência de voos de JFK.
 - Mapear rotas de destino mais demandadas a partir de JFK.
 
+## 3c. Infraestrutura física do CD (chão de armazém) para NY
+- Paletes disponíveis (padrão e, se aerospace, dimensões especiais/ULD).
+- Empilhadeira / paleteira para movimentação de carga pesada.
+- Doca de recebimento e de expedição com acesso para caminhão.
+- Balança calibrada para pesagem (dado crítico para carga aérea).
+- Área de recebimento, separação e staging da carga antes do transfer.
+- Área segregada e certificada para screening (exigência CCSF/TSA).
+- Área refrigerada / câmara fria (pendência para healthcare — hoje só 1 contêiner).
+- Espaço de armazenagem dimensionado ao volume previsto (m²/posições de palete).
+- Rack/estrutura de estocagem, se a carga exigir verticalização.
+- Material de embalagem, cintas, filme stretch e etiquetas.
+- Equipamento para carga perigosa (DG), se aplicável.
+- Câmeras / controle de acesso / segurança física do armazém.
+- Estação de trabalho física do analista (mesa, computador, impressora de etiqueta).
+- Energia de backup / nobreak para área refrigerada e sistemas.
+- Capacidade de pico: o CD comporta um surto de AOG sem travar?
+- Distância e tempo de transfer do CD até o portão de carga de JFK.
+
 ## 7b. Comunicação — bullets adicionais para CD em NY
 - Comunicado interno aos times (operação, KAM, faturamento) sobre o go-live.
 - Atualização do site/material institucional com a nova praça.
