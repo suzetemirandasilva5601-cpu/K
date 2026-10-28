@@ -1,142 +1,120 @@
-# Abertura da base NYC — Pontos a levantar, insights e perguntas
+# Abertura da base NYC — Nota interna ATY (debate de abordagem)
 
-> Material de trabalho para você aprofundar a visão da operação. Tudo ancorado no que foi
-> dito na reunião do dia 27/10 e no checklist. Dividido em: (1) insights que você pode
-> trazer, (2) pontos/tensões a levantar, (3) perguntas por área, (4) os ângulos que
-> ninguém puxou na reunião.
-
----
-
-## 1. Insights que você pode trazer (leitura que agrega)
-
-**I1 — O projeto está misturando duas coisas: abrir UMA base e criar o PADRÃO de abrir
-bases.** A reunião oscilou o tempo todo entre "resolver o JFK" e "criar o SOP de abertura
-de station". São entregáveis diferentes com donos e prazos diferentes. Separar os dois
-evita que a urgência do JFK (1º embarque em novembro) atropele a construção do padrão
-replicável — que é o ativo de maior valor no longo prazo. **Esse é o insight mais
-estratégico: o JFK é o piloto; o produto é o método.**
-
-**I2 — A escolha do parceiro está criando um trade-off de indústria que não foi
-explicitado.** O CCSF é forte em aerospace mas não tem área refrigerada para healthcare.
-Isso significa que **a escolha do parceiro define, na prática, qual indústria a base
-atende primeiro** — e healthcare pode exigir um segundo parceiro ou uma estrutura
-diferente. A decisão "qual parceiro" é, disfarçada, uma decisão "qual carga". Vale tornar
-isso explícito.
-
-**I3 — O gargalo real é interdependência, não lista de tarefas.** O Possidônio já intuiu
-("quase um Gantt"). O TSA tem prazo próprio que trava o go-live; a SOP depende da visita;
-o cadastro de pagamento depende da qualificação. Uma lista de checklist esconde isso. Um
-diagrama de dependências mostra que a data do 1º embarque **não é uma escolha, é uma
-consequência** do caminho crítico (provavelmente o TSA).
-
-**I4 — A operacionalização no sistema é um ponto cego.** O próprio Possidônio disse "não
-sei nem como que operacionaliza isso no sistema". Abrir a base fisicamente é uma coisa;
-fazer o sistema reconhecer JFK como origem, com buying/selling charge, SOP clonada e
-cadastro de pagamento, é outra — e ninguém assumiu isso. É onde um AOG real pode travar
-no dia do teste.
-
-**I4b — "Cargas que descem para Miami e podem subir para JFK" é uma tese de volume ainda
-não quantificada.** A lógica existe (aerospace/healthcare do norte dos EUA), mas não
-apareceu número: quantos embarques/mês, qual volume, qual faturamento. Sem isso, não dá
-para dimensionar o analista nem justificar a base economicamente.
+> USO INTERNO ATY CONSULTING. Não é material para a DMS. Objetivo: alinhar entre nós
+> como conduzir a demanda do Zé (abrir a base de NY + criar o SOP replicável), onde está
+> o valor que a ATY entrega, o que precisamos resolver antes de avançar e onde podemos
+> errar. Ancorado na transcrição da reunião da DMS de 27/10 e no checklist.
 
 ---
 
-## 2. Pontos / tensões a levantar (apareceram e ficaram soltos)
+## 1. Como a ATY deve enquadrar a demanda (a leitura que define nosso escopo)
 
-**P1 — Homologação dupla de indústria é rara.** O Filipe foi direto: "é muito difícil ter
-num custo competitivo alguém homologado nas duas indústrias". Ou seja, querer aerospace +
-healthcare no mesmo parceiro pode ser inviável. Levantar: começamos só com aerospace e
-tratamos healthcare como fase 2 com outro parceiro?
+**L1 — O Zé pediu "abrir a base"; o entregável de maior valor da ATY é o MÉTODO, não o
+JFK.** A reunião da DMS oscilou entre resolver o JFK e criar o SOP de abertura de station.
+Para nós, isso é uma escolha de posicionamento: entregar só o JFK é execução pontual;
+entregar o **padrão replicável de abertura de base** é consultoria de processo, escopo
+maior e mais defensável. Decidir internamente: vendemos/entregamos o quê — o piloto ou o
+método? Minha leitura é que o método é onde a ATY se diferencia e onde o Zé terá mais
+retorno.
 
-**P2 — O parceiro "não quis se desqualificar".** O Leonardo notou que o CCSF evitou se
-comprometer com refrigeração para não reprovar na homologação. Isso é um sinal amarelo:
-há risco de o parceiro aceitar escopo que não consegue cumprir. A visita do Tiago precisa
-testar capacidade real, não declarada.
+**L2 — A demanda tem duas naturezas que não devemos fundir no mesmo produto.** (a) Um
+**diagnóstico/Gantt do JFK** (urgente, 1º embarque em novembro) e (b) um **template de
+SOP replicável** (estruturante, sem pressa de data). Se amarrarmos os dois, a urgência do
+JFK contamina a qualidade do template. Sugestão: dois entregáveis, um rápido e um
+estruturante.
 
-**P3 — O prazo está invertido.** Fala-se em "1º embarque em novembro" e "fechar tudo até
-sexta", mas o Possidônio reconheceu que "talvez a conclusão seja dezembro" por causa do
-TSA. A tensão: a data foi combinada com Zé e Fernando antes de mapear as dependências.
-Levantar: a data é meta ou compromisso? Se o TSA atrasar, o que acontece?
-
-**P4 — Donos órfãos.** Três itens sem responsável fechado: quem cadastra o parceiro no
-pagamento, quem responde pela comunicação (TMT ou operação?), e quem faz o template de
-faturamento. Em abertura de base, item sem dono = item que não acontece.
-
-**P5 — Visto do Leonardo (RD) para os EUA.** Ele mencionou ter problema de visto. Se o RD
-não consegue ir aos EUA homologar presencialmente, isso muda quem faz a validação local
-e cria dependência do Tiago. Pequeno, mas é um ponto de operação real.
-
-**P6 — Benchmark de concorrência não tem dono.** O João Rodrigues pediu para o Tiago
-"identificar transportadoras e agentes rodando na região para benchmark", mas isso não
-virou ação com entregável. Oportunidade perdida se não for registrado.
+**L3 — Onde a ATY agrega além do óbvio.** A DMS sabe abrir a operação (já fez Houston). O
+que falta — e é o nosso espaço — é a **camada de método e de caso econômico**: o SOP que
+replica, o Gantt de interdependências, e o número que justifica a base. A reunião deles
+foi 90% operacional e 0% econômica; é aí que entramos.
 
 ---
 
-## 3. Perguntas relevantes por área (para a próxima reunião)
+## 2. O que precisamos resolver internamente antes de avançar
 
-### Carga e volume (Produto / RD)
-- Quantos embarques/mês de aerospace hoje passam por Miami e migrariam para JFK?
-- Qual o faturamento e a margem estimados da 1ª onda?
-- Healthcare entra quando — e com qual parceiro, dado que o CCSF não tem refrigeração?
-- Além de aerospace e healthcare, há energy ou outra vertical com volume na região norte?
+**Q1 — Qual o escopo que a ATY assume?** Só facilitar/estruturar (método, Gantt,
+template), ou também puxar a execução de itens órfãos (cadastro, faturamento, comunicação)?
+Isso muda esforço e precificação.
 
-### Parceiro e estrutura (RD / Operação)
-- O CCSF está homologado em aerospace de fato, ou só declarou? (a visita confirma?)
-- Qual a capacidade de pico do parceiro para AOG (velocidade que Miami já exige)?
-- Existe plano B de parceiro se a visita reprovar a estrutura?
-- O contêiner refrigerado do parceiro atende que tamanho de carga?
+**Q2 — Temos os dados para fazer o caso econômico?** O caso "migrar Miami→JFK compensa?"
+depende de volume/faturamento que não apareceu na reunião. Precisamos pedir ao Zé ou
+assumir que fica como premissa aberta. Decidir se entregamos com placeholder ou esperamos
+o dado.
 
-### Sistema e processo (Operação / Qualidade)
-- Como JFK é cadastrada no sistema como origem (buying/selling charge)?
-- A SOP default de Houston está pronta para clonar hoje?
-- Quem cria a SOP de abertura de station — Operação, Qualidade ou CAN?
-- Qual o SLA de informação com o parceiro (pré-alerta, warehouse receipt, CCT, pesagem)?
+**Q3 — Até onde vai nossa responsabilidade sobre o prazo?** A data do 1º embarque foi
+combinada entre Zé e Fernando antes de mapear dependências (o TSA tem prazo próprio). Se a
+ATY assume o cronograma, assume também o risco de a data não bater. Precisamos deixar
+claro que a data é consequência do caminho crítico, não uma entrega nossa.
 
-### Prazo e governança (todos)
-- Qual a data real de resposta do TSA — e ela é o caminho crítico?
-- A data do 1º embarque é meta ou compromisso firmado com Zé/Fernando?
-- Quem é o dono único de cada item órfão (cadastro, comunicação, faturamento)?
-- Em que momento o RH entra (contratação do analista)? — pergunta que o Filipe já fez
-
-### Financeiro e regulatório
-- Como o pagamento ao parceiro no exterior é contabilizado (spread cambial, prepaid)?
-- Há custo de overtime/fim de semana no parceiro que muda a conta de AOG?
-- Quais requisitos regulatórios de exportação por indústria em JFK (além do TSA)?
+**Q4 — Como tratamos a lacuna de refrigeração do parceiro?** Não é nosso papel escolher
+parceiro, mas é nosso papel sinalizar que aerospace≠healthcare muda a estratégia. Definir:
+registramos como risco e deixamos a decisão com a DMS, ou recomendamos ativamente começar
+só por aerospace?
 
 ---
 
-## 4. Os ângulos que NINGUÉM puxou na reunião (seu diferencial)
+## 3. Os pontos da reunião que viram insumo do nosso trabalho
 
-**A1 — Qual o critério de SUCESSO da base?** Discutiu-se muito o "como abrir" e quase nada
-o "como saber se deu certo". Propor métricas de go/no-go pós-abertura: % AOG no prazo,
-volume migrado vs. previsto, margem realizada, custo por embarque JFK vs. Miami.
+Tudo abaixo saiu da transcrição e é matéria-prima para os entregáveis — não para levar à
+DMS como pergunta, mas para nós sabermos onde o terreno é instável:
 
-**A2 — Qual o custo de abrir vs. o ganho de migrar?** Ninguém colocou o caso econômico.
-Se a carga já roda por Miami, qual a economia real de subir para JFK (frete, tempo, AOG)?
-A base se paga? Esse é o número que falta para a decisão ser sólida — igual ao que fizemos
-no projeto Ásia.
-
-**A3 — Reversibilidade.** Se a base não performar, qual o custo de fechar? Como é parceria
-(não entidade), deveria ser barato — mas isso precisa estar no acordo (aviso prévio, o que
-acontece com o volume migrado). Mesmo princípio da China.
-
-**A4 — O que o JFK tira de Miami?** Migrar carga de Miami para JFK pode desidratar a
-station de Miami. Há impacto no dimensionamento de Houston/Miami? É um sistema de vasos
-comunicantes, não uma adição isolada.
-
-**A5 — Comunicação ao mercado como alavanca comercial, não só aviso.** O Possidônio tratou
-a comunicação como "sair no radar de embarque". Mas abrir JFK é também um argumento
-comercial (saída direta para aerospace) — pode ser usado pelos KAMs para ganhar conta, não
-só como comunicado. Conecta com a estrutura de KAM que o Gilberto descreveu.
+- **SOP de abertura de station não existe** (fala da Gabriella). É o buraco que o nosso
+  template preenche — nosso principal gancho de valor.
+- **Interdependências não mapeadas** (o Possidônio pediu "quase um Gantt"). É um entregável
+  que a ATY faz melhor que eles — montar o caminho crítico com o TSA no centro.
+- **Operacionalização no sistema é ponto cego** ("não sei nem como operacionaliza"). Risco
+  de execução que pode travar o 1º trial; precisamos listar, mesmo que a solução seja deles.
+- **Donos órfãos** (cadastro de pagamento, comunicação/TMT, faturamento). Num projeto de
+  consultoria, mapear quem-faz-o-quê é entregável clássico nosso (matriz RACI).
+- **Homologação dupla rara + parceiro "não quis se desqualificar"** (Filipe/Leonardo).
+  Risco de o parceiro aceitar escopo que não cumpre — entra no nosso registro de riscos.
+- **Benchmark de concorrência sem dono** (pedido do João ao Tiago). Oportunidade de a ATY
+  propor como linha de trabalho.
 
 ---
 
-## 5. Como usar isto na prática
-- **Para a próxima reunião:** leve a seção 3 (perguntas por área) como pauta — força cada
-  dono a responder.
-- **Para o Possidônio:** leve o I3 (Gantt de interdependências) e o P3 (data é meta ou
-  compromisso?) — é o que ele mesmo intuiu e vai valorizar.
-- **Para o Zé/Fernando:** leve a seção 4 (caso econômico, critério de sucesso,
-  reversibilidade) — é a visão de board que eleva a conversa de "abrir a base" para
-  "investir numa base com retorno medido".
+## 4. A tese de valor da ATY nesta demanda (o que nos diferencia)
+
+Estes são os ângulos que a reunião da DMS não tocou — e que a ATY pode trazer para elevar
+a entrega de "ajudamos a abrir o JFK" para "estruturamos como a DMS abre qualquer base":
+
+**V1 — Caso econômico do JFK.** Economia de migrar Miami→JFK (frete, tempo, AOG) vs. custo
+da base. Se a carga já roda por Miami, qual o ganho real? Mesmo método do projeto Ásia.
+É o número que falta e que só nós estamos olhando.
+
+**V2 — Critério de sucesso pós-abertura.** Métricas de go/no-go: % AOG no prazo, volume
+migrado vs. previsto, margem, custo por embarque JFK vs. Miami. Transforma "abrir" em
+"abrir e medir".
+
+**V3 — Impacto sistêmico em Miami.** Migrar carga para JFK desidrata Miami. É vaso
+comunicante, não adição. Dimensionamento das três stations (Miami/Houston/NY) precisa ser
+olhado junto — ângulo que ninguém puxou.
+
+**V4 — Reversibilidade.** Como é parceria e não entidade, o custo de fechar deveria ser
+baixo — mas precisa estar no acordo. Mesmo princípio que aplicamos na China; dá coerência
+à nossa recomendação nos dois projetos.
+
+**V5 — Ponte com a agenda de estrutura/KAM.** Abrir JFK (saída direta aerospace) é
+argumento comercial para os KAMs do Gilberto, não só um comunicado. Conectar as duas
+frentes da conta DMS mostra visão integrada da ATY.
+
+---
+
+## 5. Proposta de encaminhamento interno
+
+1. **Decidir o escopo (Q1)** — método + JFK, ou só JFK. Recomendo método + JFK como piloto.
+2. **Dividir em 2 entregáveis:** (a) Gantt de interdependências do JFK — rápido, útil já
+   na próxima reunião deles; (b) template de SOP replicável — estruturante, nosso ativo.
+3. **Montar o caso econômico (V1)** mesmo com premissas abertas, para não entregar só
+   processo sem número — é o que diferencia a ATY.
+4. **Registrar riscos** (refrigeração, parceiro superdeclarado, prazo-TSA, sistema) numa
+   matriz, como fazemos nos outros projetos da conta.
+5. **Alinhar com o Gilberto** a conexão JFK ↔ estrutura de KAM antes de levar ao Zé.
+
+---
+
+## 6. O que levo para o debate interno (pauta curta)
+- Vendemos o piloto ou o método?
+- Assumimos o cronograma (e o risco da data) ou só estruturamos?
+- Entregamos o caso econômico com premissa aberta ou esperamos o dado da DMS?
+- Quem na ATY toca cada entregável e em que prazo?
