@@ -308,18 +308,6 @@ function template() {
   const P = s => `[[${s}]]`;
   const sl = [];
 
-  // Como usar
-  sl.push([
-    header('Template de case · Como usar', { titleW: 12 }),
-    box(L, 1.2, LW, 5.7, 'Para quem escreve o case',
-      '1. Duplique este arquivo e renomeie: "Case XX - Nome".\n2. Escreva o enunciado primeiro. Ele é lido em voz alta e deve caber em 1 minuto.\n3. Escolha de 4 a 6 perguntas. Cada pergunta tem uma página de orientação com a resposta numérica e uma provocação.\n4. Resolva o case inteiro antes de publicar. Confira se os números fecham entre si, ou deixe uma inconsistência proposital e diga isso na orientação.\n5. Preencha o padrão de correção com o que significa nota 1, 3 e 5 neste case, e liste de 5 a 7 marcos.\n6. Copie os marcos para a ficha de avaliação do case.\n7. Apague esta página antes de enviar ao entrevistador.\n\nDuplique ou apague as páginas de pergunta conforme o número de perguntas, e atualize a numeração (1/N).',
-      { size: 11 }),
-    box(R, 1.2, RW, 5.7, 'Regras de estilo',
-      '• **Esquerda = o que o entrevistador fala.** Perguntas em itálico, dados para entregar em lista\n• **Direita = o que só o entrevistador vê.** Resposta esperada, contas, erros comuns e provocações\n• Toda conta mostra o cálculo, não só o resultado\n• Dados ficam escondidos até o candidato pedir. Marque isso com "Entregue quando o candidato pedir"\n• Use dados fictícios e escreva isso na capa e no rodapé dos gráficos\n• Dificuldade de 1 a 3 em Geral, Quant e Criatividade\n• O case dura de 30 a 35 minutos. Se a resolução passar disso, corte uma pergunta\n• Textos em cinza e itálico são instruções do template. Substitua todos antes de enviar',
-      { size: 11 }),
-    footer(1, 'Ciclo de cases · Template de case'),
-  ]);
-
   sl.push(capa({
     titulo: 'Case XX: [Nome do case]', geral: '[1-3]', quant: '[1-3]', criat: '[1-3]',
     descricao: [
@@ -346,7 +334,7 @@ function template() {
       `1. Estrutura\n2. ${P('Pergunta 1')}\n3. ${P('Pergunta 2')}\n4. ${P('Pergunta 3')}\n5. ${P('Pergunta 4')}\n6. Recomendação`,
       { size: 10.5, text: { paraAfter: 1 } }),
     avaliacao(8.7, 3.82, 4.3, 3.08, '1 = fraco · 5 = excelente · registre a nota na ficha, no fim do arquivo'),
-    footer(2, rod),
+    footer(1, rod),
   ]);
 
   sl.push([
@@ -357,7 +345,7 @@ function template() {
     box(R, 1.2, RW, 5.7, 'Orientação ao entrevistador',
       `${P('O que diferencia uma estrutura boa de uma fraca neste case, e qual provocação fazer se faltar algo.')}\n\nSe o candidato pedir, entregue as informações abaixo:\n\n${P('Tema, ex.: Regulação')}\n• ${P('Informação qualitativa')}\n\n${P('Tema, ex.: Concorrência')}\n• ${P('Informação qualitativa')}\n\n${P('Tema, ex.: Clientes')}\n• ${P('Informação qualitativa')}`,
       { size: 10 }),
-    footer(3, rod),
+    footer(2, rod),
   ]);
 
   const perguntaSlide = (n, a, b) => [
@@ -379,7 +367,7 @@ function template() {
     box(R, 4.1, RW, 2.8, `Orientação: ${b}`,
       `• ${P('Conta 1')} = ${P('resultado')}\n• ${P('Conta 2')} = ${P('resultado')}\n\n${P('O que o candidato precisa perceber. Use tabela quando houver mais de 3 contas.')}\n\nProvoque: ${P('"pergunta de provocação"')}`,
       { size: 10 }),
-    footer(n + 1, rod),
+    footer(n, rod),
   ];
   sl.push(perguntaSlide(3, '[tema da pergunta 1]', '[tema da pergunta 2]'));
   sl.push(perguntaSlide(4, '[tema da pergunta 3]', '[tema da pergunta 4]'));
@@ -392,7 +380,7 @@ function template() {
     box(R, 1.2, RW, 5.7, 'Riscos e próximos passos',
       `__Riscos__\n• ${P('Risco específico da recomendação, ligado a um número do case')}\n• ${P('Risco específico')}\n\n__Próximos passos__\n• ${P('O que testar ou validar primeiro')}\n• ${P('Marco de decisão')}\n\n_ Penalize riscos genéricos (crise, câmbio, concorrência em geral) que não se ligam aos números do case.`,
       { size: 10.5 }),
-    footer(6, rod),
+    footer(5, rod),
   ]);
 
   sl.push([
@@ -410,7 +398,7 @@ function template() {
     box(R, 4.6, RW, 2.3, 'Marcos do case (copie para a ficha de avaliação)',
       `1. ${P('Marco de estrutura')}\n2. ${P('Resultado numérico 1')}\n3. ${P('Resultado numérico 2')}\n4. ${P('A conta que decide')}\n5. ${P('Insight qualitativo esperado')}\n6. ${P('Recomendação esperada')}`,
       { size: 10, text: { paraAfter: 1 } }),
-    footer(7, rod),
+    footer(6, rod),
   ]);
 
   return { title: 'Template de case · Ciclo de cases CCU', slides: sl };
